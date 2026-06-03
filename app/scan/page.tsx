@@ -23,6 +23,16 @@ export default function ScanPage() {
     const preview = URL.createObjectURL(file);
     setImagePreview(preview);
 
+    // Retrieve active patient session
+    let patientId = null;
+    try {
+      const sessionStr = localStorage.getItem("healflow-session");
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        patientId = session.id || null;
+      }
+    } catch (e) {}
+
     try {
       const base64 = await fileToBase64(file);
 
@@ -32,6 +42,7 @@ export default function ScanPage() {
         body: JSON.stringify({
           imageBase64: base64,
           mimeType: file.type,
+          patientId,
         }),
       });
 
@@ -143,18 +154,104 @@ export default function ScanPage() {
           {/* Upload / Result Area */}
           <div>
             {!result && !isLoading && (
-              <UploadZone
-                onFileSelect={handleFileSelect}
-                acceptedTypes={[
-                  "image/jpeg",
-                  "image/png",
-                  "image/webp",
-                ]}
-                maxSizeMB={10}
-                label="Upload skin/wound photo"
-                sublabel="Drag & drop karo ya click karo"
-                icon="image"
-              />
+              <>
+                <UploadZone
+                  onFileSelect={handleFileSelect}
+                  acceptedTypes={[
+                    "image/jpeg",
+                    "image/png",
+                    "image/webp",
+                  ]}
+                  maxSizeMB={10}
+                  label="Upload skin/wound photo"
+                  sublabel="Drag & drop karo ya click karo"
+                  icon="image"
+                />
+                
+                <div
+                  style={{
+                    marginTop: "16px",
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
+                >
+                  <button
+                    id="demo-scan-btn"
+                    onClick={async () => {
+                      try {
+                        setIsLoading(true);
+                        setError(null);
+                        
+                        const res = await fetch("/skin_dryness_test.png");
+                        const blob = await res.blob();
+                        const file = new File([blob], "skin_dryness_test.png", { type: "image/png" });
+                        
+                        // Set preview
+                        const preview = URL.createObjectURL(file);
+                        setImagePreview(preview);
+
+                        const reader = new FileReader();
+                        // Retrieve active patient session
+                        let patientId = null;
+                        try {
+                          const sessionStr = localStorage.getItem("healflow-session");
+                          if (sessionStr) {
+                            const session = JSON.parse(sessionStr);
+                            patientId = session.id || null;
+                          }
+                        } catch (e) {}
+
+                        reader.onloadend = async () => {
+                          const base64 = (reader.result as string).split(",")[1];
+                          try {
+                            const response = await fetch("/api/analyze/skin", {
+                              method: "POST",
+                              headers: { "Content-Type": "application/json" },
+                              body: JSON.stringify({
+                                imageBase64: base64,
+                                mimeType: file.type,
+                                patientId,
+                              }),
+                            });
+
+                            if (!response.ok) {
+                              throw new Error("Analysis failed. Please try again.");
+                            }
+
+                            const data: ScanResult = await response.json();
+                            setResult(data);
+                          } catch (err) {
+                            setError(err instanceof Error ? err.message : "Something went wrong.");
+                          } finally {
+                            setIsLoading(false);
+                          }
+                        };
+                        reader.readAsDataURL(file);
+                      } catch (err) {
+                        setError("Failed to load demo image.");
+                        setIsLoading(false);
+                      }
+                    }}
+                    style={{
+                      padding: "8px 16px",
+                      background: "rgba(16,185,129,0.1)",
+                      border: "1px dashed rgba(16,185,129,0.3)",
+                      borderRadius: "8px",
+                      color: "#10b981",
+                      fontFamily: "var(--font-body)",
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      cursor: "pointer",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "6px",
+                      transition: "all 0.2s ease",
+                    }}
+                  >
+                    ✨ Try Demo Photo (Test Fungal/Dry Patch)
+                  </button>
+                </div>
+              </>
             )}
 
             {isLoading && <LoadingSkeleton type="scan" />}

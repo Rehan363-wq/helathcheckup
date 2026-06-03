@@ -1,0 +1,562 @@
+"use client";
+
+import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { createClient } from "@/lib/supabase/client";
+import { MOCK_DOCTORS } from "@/lib/doctors";
+import { Send, User, MessageSquare, ArrowLeft, ShieldAlert } from "lucide-react";
+
+interface Profile {
+  id: string;
+  full_name: string;
+  role: string;
+  specialization?: string;
+  avatar_url?: string;
+}
+
+interface ChatMessage {
+  id: string;
+  sender_id: string;
+  content: string;
+  created_at: string;
+}
+
+export default function ChatPage() {
+  const router = useRouter();
+  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [doctors, setDoctors] = useState<Profile[]>([]);
+  const [selectedDoctor, setSelectedDoctor] = useState<Profile | null>(null);
+  
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [dbStatus, setDbStatus] = useState<string | null>(null);
+
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  
+  // Initialize client safely
+  let supabase: any = null;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.warn("Supabase client not initialized:", e);
+  }
+
+  // Check login session
+  useEffect(() => {
+    const session = localStorage.getItem("healflow-session");
+    if (!session) {
+      router.push("/login");
+      return;
+    }
+    const parsed = JSON.parse(session);
+    setCurrentUser(parsed);
+    
+    if (parsed.role === "doctor") {
+      router.push("/doctor-dashboard");
+    }
+  }, [router]);
+
+  // Load doctors list
+  useEffect(() => {
+    const loadDoctors = async () => {
+      if (!supabase) {
+        useFallbackDoctors();
+        return;
+      }
+
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("id, full_name, role, specialization, avatar_url")
+          .eq("role", "doctor");
+
+        if (error) throw error;
+
+        if (data && data.length > 0) {
+          setDoctors(data);
+          setDbStatus("Connected to Supabase DB");
+        } else {
+          useFallbackDoctors();
+        }
+      } catch (err) {
+        console.warn("Supabase profiles load failed, fallback to mock data:", err);
+        useFallbackDoctors();
+      }
+    };
+
+    const useFallbackDoctors = () => {
+      const formattedMocks = MOCK_DOCTORS.map((d) => ({
+        id: d.id,
+        full_name: d.name,
+        role: "doctor",
+        specialization: d.specialization,
+      }));
+      setDoctors(formattedMocks);
+      setDbStatus("Sandbox Mode: Loaded Pre-verified Doctors");
+    };
+
+    loadDoctors();
+  }, []);
+
+  // Load messages when selected doctor changes
+  useEffect(() => {
+    if (!selectedDoctor || !currentUser) return;
+    
+    const loadMessages = async () => {
+      if (!supabase || currentUser.isSandbox) {
+        loadMockHistory();
+        return;
+      }
+
+      try {
+        // Find or create chat room
+        const { data: chatData, error: chatError } = await supabase
+          .from("chats")
+          .select("id")
+          .or(`and(patient_id.eq.${currentUser.id},doctor_id.eq.${selectedDoctor.id}),and(patient_id.eq.${selectedDoctor.id},doctor_id.eq.${currentUser.id})`)
+          .maybeSingle();
+
+        if (chatError) throw chatError;
+
+        let chatId = chatData?.id;
+
+        if (!chatId) {
+          const { data: newChat, error: createError } = await supabase
+            .from("chats")
+            .insert({ patient_id: currentUser.id, doctor_id: selectedDoctor.id })
+            .select("id")
+            .single();
+
+          if (createError) throw createError;
+          chatId = newChat.id;
+        }
+
+        // Fetch messages for room
+        const { data: msgData, error: msgError } = await supabase
+          .from("messages")
+          .select("*")
+          .eq("chat_id", chatId)
+          .order("created_at", { ascending: true });
+
+        if (msgError) throw msgError;
+
+        setMessages(msgData || []);
+
+        // Subscribe to Realtime messages
+        const channel = supabase
+          .channel(`room-${chatId}`)
+          .on(
+            "postgres_changes",
+            { event: "INSERT", schema: "public", table: "messages", filter: `chat_id=eq.${chatId}` },
+            (payload: any) => {
+              setMessages((prev) => [...prev, payload.new]);
+            }
+          )
+          .subscribe();
+
+        return () => {
+          supabase.removeChannel(channel);
+        };
+      } catch (err) {
+        console.warn("Realtime fetch failed, fallback to mock conversation history:", err);
+        loadMockHistory();
+      }
+    };
+
+    const loadMockHistory = () => {
+      const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
+      const saved = localStorage.getItem(mockKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        const greetMsg: ChatMessage = {
+          id: "greet",
+          sender_id: selectedDoctor.id,
+          content: `Hello! Main ${selectedDoctor.full_name} (${selectedDoctor.specialization}) hoon. Aapko kya health symptoms aa rahe hain, detail mein share karein.`,
+          created_at: new Date().toISOString(),
+        };
+        setMessages([greetMsg]);
+        localStorage.setItem(mockKey, JSON.stringify([greetMsg]));
+      }
+    };
+
+    loadMessages();
+  }, [selectedDoctor, currentUser]);
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
+
+  const handleSendMessage = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!input.trim() || !selectedDoctor || !currentUser) return;
+
+    const userMsgContent = input.trim();
+    setInput("");
+
+    const newMsg: ChatMessage = {
+      id: Date.now().toString(),
+      sender_id: currentUser.id || "patient-demo-id",
+      content: userMsgContent,
+      created_at: new Date().toISOString(),
+    };
+
+    setMessages((prev) => [...prev, newMsg]);
+
+    const isSandboxFlow = !supabase || currentUser.isSandbox;
+
+    if (!isSandboxFlow) {
+      try {
+        // Find room ID
+        const { data: chatData } = await supabase
+          .from("chats")
+          .select("id")
+          .or(`and(patient_id.eq.${currentUser.id},doctor_id.eq.${selectedDoctor.id}),and(patient_id.eq.${selectedDoctor.id},doctor_id.eq.${currentUser.id})`)
+          .single();
+
+        if (chatData?.id) {
+          const { error } = await supabase.from("messages").insert({
+            chat_id: chatData.id,
+            sender_id: currentUser.id,
+            content: userMsgContent,
+          });
+          if (error) throw error;
+        }
+      } catch (err) {
+        console.warn("DB save failed, using local sandbox fallback for message");
+      }
+    }
+
+    // Save locally
+    const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
+    const localHistory = [...messages, newMsg];
+    localStorage.setItem(mockKey, JSON.stringify(localHistory));
+
+    // Simulate doctor replies in Sandbox Mode
+    if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
+      setLoading(true);
+      setTimeout(() => {
+        // Mock a reply using basic rules or Gemini
+        let doctorReply = "Ji, main aapki problem samajh raha hoon. Aap please rest karein aur fluids piyo. Agar problem badhti hai, toh consultation ke liye clinic visit karein.";
+        
+        if (selectedDoctor.specialization === "Dermatologist") {
+          if (userMsgContent.toLowerCase().includes("rash") || userMsgContent.toLowerCase().includes("fungal")) {
+            doctorReply = "Aapke skin rashes fungal lag rahe hain. Area ko bilkul dry rakhein aur shared towels bilkul use na karein. OTC clotrimazole cream twice daily apply karein.";
+          } else {
+            doctorReply = "Skin complications ke liye photo upload analyzer ka use karein, aur patches par moisturizing lotion apply karein.";
+          }
+        } else if (selectedDoctor.specialization === "General Physician") {
+          if (userMsgContent.toLowerCase().includes("fever") || userMsgContent.toLowerCase().includes("b बुखार")) {
+            doctorReply = "Halka fever hai toh paracetamol (650mg) tablet 6 ghante ke intervals mein lein agar body temperature high hota hai. Cold compress use karein aur rest karein.";
+          }
+        }
+
+        const replyMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          sender_id: selectedDoctor.id,
+          content: doctorReply,
+          created_at: new Date().toISOString(),
+        };
+
+        setMessages((prev) => {
+          const updated = [...prev, replyMsg];
+          localStorage.setItem(mockKey, JSON.stringify(updated));
+          return updated;
+        });
+        setLoading(false);
+      }, 1500);
+    }
+  };
+
+  return (
+    <div
+      style={{
+        minHeight: "calc(100vh - 64px)",
+        background: "var(--bg-surface)",
+        display: "flex",
+        padding: "24px",
+        gap: "20px",
+      }}
+      className="chat-container-layout"
+    >
+      {/* Left Panel: Doctors List */}
+      <div
+        className={`left-sidebar ${selectedDoctor ? "mobile-hidden" : ""}`}
+        style={{
+          width: "320px",
+          background: "var(--bg-card)",
+          borderRadius: "16px",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-card)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+        }}
+      >
+        <div style={{ padding: "20px", borderBottom: "1px solid var(--border)" }}>
+          <h3 style={{ fontFamily: "var(--font-heading)", fontSize: "16px", fontWeight: 700, display: "flex", alignItems: "center", gap: "8px" }}>
+            <MessageSquare size={18} style={{ color: "var(--purple-primary)" }} />
+            Active Doctors
+          </h3>
+          {dbStatus && (
+            <span style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "4px", display: "block" }}>
+              🟢 {dbStatus}
+            </span>
+          )}
+        </div>
+
+        <div style={{ flex: 1, overflowY: "auto", display: "flex", flexDirection: "column" }}>
+          {doctors.map((doc) => (
+            <button
+              key={doc.id}
+              onClick={() => setSelectedDoctor(doc)}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+                padding: "16px 20px",
+                background: selectedDoctor?.id === doc.id ? "rgba(124,58,237,0.06)" : "transparent",
+                border: "none",
+                borderBottom: "1px solid rgba(0,0,0,0.03)",
+                textAlign: "left",
+                cursor: "pointer",
+                transition: "all 0.2s",
+                width: "100%",
+              }}
+            >
+              <div
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                }}
+              >
+                {doc.full_name.substring(4, 6)}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>
+                  {doc.full_name}
+                </p>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "var(--text-secondary)" }}>
+                  {doc.specialization}
+                </p>
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Right Panel: Chat Stream */}
+      <div
+        className={`chat-feed-panel ${!selectedDoctor ? "mobile-hidden" : ""}`}
+        style={{
+          flex: 1,
+          background: "var(--bg-card)",
+          borderRadius: "16px",
+          border: "1px solid var(--border)",
+          boxShadow: "var(--shadow-card)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
+          minHeight: "500px",
+        }}
+      >
+        {selectedDoctor ? (
+          <>
+            {/* Active Header */}
+            <div
+              style={{
+                padding: "16px 24px",
+                borderBottom: "1px solid var(--border)",
+                display: "flex",
+                alignItems: "center",
+                gap: "12px",
+              }}
+            >
+              <button
+                onClick={() => setSelectedDoctor(null)}
+                className="mobile-back-btn"
+                style={{
+                  background: "none",
+                  border: "none",
+                  cursor: "pointer",
+                  color: "var(--text-primary)",
+                  padding: "6px",
+                  display: "none",
+                }}
+              >
+                <ArrowLeft size={20} />
+              </button>
+              <div
+                style={{
+                  width: "36px",
+                  height: "36px",
+                  borderRadius: "50%",
+                  background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontWeight: 600,
+                }}
+              >
+                {selectedDoctor.full_name.substring(4, 6)}
+              </div>
+              <div>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>
+                  {selectedDoctor.full_name}
+                </p>
+                <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", color: "var(--text-secondary)" }}>
+                  Active Consultation • {selectedDoctor.specialization}
+                </p>
+              </div>
+            </div>
+
+            {/* Message History */}
+            <div
+              style={{
+                flex: 1,
+                padding: "24px",
+                overflowY: "auto",
+                display: "flex",
+                flexDirection: "column",
+                gap: "14px",
+                background: "rgba(0,0,0,0.01)",
+              }}
+            >
+              {messages.map((msg) => {
+                const isMe = msg.sender_id === (currentUser?.id || "patient-demo-id");
+                return (
+                  <div
+                    key={msg.id}
+                    style={{
+                      display: "flex",
+                      justifyContent: isMe ? "flex-end" : "flex-start",
+                      width: "100%",
+                    }}
+                  >
+                    <div
+                      style={{
+                        maxWidth: "70%",
+                        background: isMe ? "var(--purple-primary)" : "var(--bg-card-dark)",
+                        color: isMe ? "white" : "var(--text-primary)",
+                        padding: "10px 16px",
+                        borderRadius: isMe ? "14px 14px 2px 14px" : "14px 14px 14px 2px",
+                        fontSize: "13px",
+                        fontFamily: "var(--font-body)",
+                        lineHeight: 1.5,
+                        border: isMe ? "none" : "1px solid var(--border)",
+                      }}
+                    >
+                      {msg.content}
+                    </div>
+                  </div>
+                );
+              })}
+              {loading && (
+                <div style={{ alignSelf: "flex-start", fontSize: "11px", color: "var(--text-secondary)" }}>
+                  typing reply...
+                </div>
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {/* Form Input */}
+            <form
+              onSubmit={handleSendMessage}
+              style={{
+                padding: "16px 24px",
+                borderTop: "1px solid var(--border)",
+                display: "flex",
+                gap: "12px",
+              }}
+            >
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder={`Type a message to ${selectedDoctor.full_name}...`}
+                style={{
+                  flex: 1,
+                  padding: "12px 16px",
+                  borderRadius: "10px",
+                  border: "1px solid var(--border)",
+                  background: "var(--bg-card)",
+                  color: "var(--text-primary)",
+                  fontSize: "13px",
+                  outline: "none",
+                }}
+              />
+              <button
+                type="submit"
+                disabled={!input.trim()}
+                style={{
+                  width: "40px",
+                  height: "40px",
+                  borderRadius: "10px",
+                  background: "var(--purple-primary)",
+                  color: "white",
+                  border: "none",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  cursor: !input.trim() ? "not-allowed" : "pointer",
+                }}
+              >
+                <Send size={16} />
+              </button>
+            </form>
+          </>
+        ) : (
+          <div
+            style={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: "12px",
+              color: "var(--text-secondary)",
+              padding: "48px",
+              textAlign: "center",
+            }}
+          >
+            <MessageSquare size={48} style={{ color: "var(--text-muted)", marginBottom: "8px" }} />
+            <h3 style={{ fontFamily: "var(--font-heading)", fontSize: "18px", color: "var(--text-primary)" }}>
+              No Active Conversation
+            </h3>
+            <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", maxWidth: "320px" }}>
+              Left side se doctor select karein aur message bhej kar consultation shuru karein.
+            </p>
+          </div>
+        )}
+      </div>
+
+      <style jsx>{`
+        @media (max-width: 768px) {
+          .chat-container-layout {
+            flex-direction: column !important;
+            padding: 12px !important;
+          }
+          .left-sidebar {
+            width: 100% !important;
+          }
+          .mobile-hidden {
+            display: none !important;
+          }
+          .mobile-back-btn {
+            display: block !important;
+          }
+        }
+      `}</style>
+    </div>
+  );
+}

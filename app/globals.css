@@ -4,11 +4,11 @@
 
 /* ===== CSS Custom Properties (Design Tokens) ===== */
 :root {
-  /* Background */
+  /* Default: Dark Mode */
   --bg-dark: #0D0A1E;
-  --bg-surface: #F8F7FF;
-  --bg-card: #FFFFFF;
-  --bg-card-dark: #1C1A2E;
+  --bg-surface: #0D0A1E;
+  --bg-card: #16122C;
+  --bg-card-dark: #110D24;
 
   /* Brand Colors */
   --purple-primary: #7C3AED;
@@ -27,20 +27,38 @@
   --severity-high: #EF4444;
 
   /* Text */
-  --text-primary: #111827;
-  --text-secondary: #6B7280;
+  --text-primary: #FFFFFF;
+  --text-secondary: #9CA3AF;
   --text-white: #FFFFFF;
-  --text-muted: #9CA3AF;
+  --text-muted: #6B7280;
 
   /* Borders & Shadows */
-  --border: #E5E7EB;
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.08);
-  --shadow-dark: 0 8px 32px rgba(0,0,0,0.4);
-  --shadow-purple: 0 8px 32px rgba(124,58,237,0.2);
+  --border: rgba(255,255,255,0.08);
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.3);
+  --shadow-dark: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-purple: 0 8px 32px rgba(124,58,237,0.15);
 
   /* Font families */
   --font-heading: 'Syne', sans-serif;
   --font-body: 'DM Sans', sans-serif;
+}
+
+/* Light Mode Overrides */
+html.light {
+  --bg-dark: #ECEAF8;
+  --bg-surface: #F8F7FF;
+  --bg-card: #FFFFFF;
+  --bg-card-dark: #ECEAF8;
+
+  --text-primary: #111827;
+  --text-secondary: #4B5563;
+  --text-white: #111827;
+  --text-muted: #9CA3AF;
+
+  --border: #E5E7EB;
+  --shadow-card: 0 4px 24px rgba(0,0,0,0.06);
+  --shadow-dark: 0 4px 24px rgba(0,0,0,0.08);
+  --shadow-purple: 0 4px 24px rgba(124,58,237,0.1);
 }
 
 /* ===== Base Reset ===== */
@@ -57,7 +75,7 @@ html {
 body {
   font-family: var(--font-body);
   color: var(--text-primary);
-  background: var(--bg-dark);
+  background: var(--bg-surface);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }

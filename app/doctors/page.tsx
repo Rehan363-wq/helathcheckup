@@ -1,20 +1,91 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import DoctorCard from "@/components/doctor-card";
 import { MOCK_DOCTORS, filterDoctors, getUniqueSpecializations } from "@/lib/doctors";
 import { Search, Filter, MapPin } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
+import { Doctor } from "@/types/doctor";
 
 export default function DoctorsPage() {
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [maxFees, setMaxFees] = useState(1000);
   const [activeDoctor, setActiveDoctor] = useState<string | null>(null);
+  
+  const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
+  const [loading, setLoading] = useState(true);
 
-  const specializations = getUniqueSpecializations(MOCK_DOCTORS);
+  // Initialize client safely
+  let supabase: any = null;
+  try {
+    supabase = createClient();
+  } catch (e) {
+    console.warn("Supabase client not initialized:", e);
+  }
+
+  useEffect(() => {
+    async function fetchDoctors() {
+      if (!supabase) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from("profiles")
+          .select("*")
+          .eq("role", "doctor");
+
+        if (error) {
+          console.error("Error fetching doctors:", error);
+          setLoading(false);
+          return;
+        }
+
+        if (data && data.length > 0) {
+          const mappedDoctors: Doctor[] = data.map((d: any, index: number) => ({
+            id: d.id,
+            name: d.full_name || "Doctor",
+            specialization: d.specialization || "General Physician",
+            degree: d.degree || "MBBS",
+            area: d.area || "Unknown Area",
+            city: d.city || "Unknown City",
+            fees: Number(d.fees) || 200,
+            rating: Number(d.rating) || 4.5,
+            phone: d.phone || "+91 99999 99999",
+            verified: true,
+            lat: d.id === '11111111-1111-1111-1111-111111111111' ? 28.5707 :
+                 d.id === '22222222-2222-2222-2222-222222222222' ? 28.5691 :
+                 d.id === '33333333-3333-3333-3333-333333333333' ? 28.6315 :
+                 d.id === '44444444-4444-4444-4444-444444444444' ? 28.5244 :
+                 28.55 + (index * 0.01) % 0.1,
+            lng: d.id === '11111111-1111-1111-1111-111111111111' ? 77.3219 :
+                 d.id === '22222222-2222-2222-2222-222222222222' ? 77.2432 :
+                 d.id === '33333333-3333-3333-3333-333333333333' ? 77.2167 :
+                 d.id === '44444444-4444-4444-4444-444444444444' ? 77.2066 :
+                 77.22 + (index * 0.015) % 0.1,
+            distance: d.id === '11111111-1111-1111-1111-111111111111' ? 2.3 :
+                      d.id === '22222222-2222-2222-2222-222222222222' ? 3.1 :
+                      d.id === '33333333-3333-3333-3333-333333333333' ? 5.2 :
+                      d.id === '44444444-4444-4444-4444-444444444444' ? 4.5 :
+                      1.5 + (index * 0.7) % 5.0,
+            imageUrl: d.avatar_url || undefined,
+          }));
+          setDoctors(mappedDoctors);
+        }
+      } catch (err) {
+        console.error("Failed to fetch doctors:", err);
+      } finally {
+        setLoading(false);
+      }
+    }
+    fetchDoctors();
+  }, []);
+
+  const specializations = useMemo(() => getUniqueSpecializations(doctors), [doctors]);
 
   const filteredDoctors = useMemo(
-    () => filterDoctors(MOCK_DOCTORS, selectedSpecialization, maxFees),
-    [selectedSpecialization, maxFees]
+    () => filterDoctors(doctors, selectedSpecialization, maxFees),
+    [doctors, selectedSpecialization, maxFees]
   );
 
   return (

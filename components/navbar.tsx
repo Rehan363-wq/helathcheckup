@@ -3,18 +3,15 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Activity } from "lucide-react";
-
-const navLinks = [
-  { href: "/scan", label: "Skin Analyzer" },
-  { href: "/report", label: "Report Explainer" },
-  { href: "/doctors", label: "Find Doctors" },
-];
+import { Menu, X, Activity, Sun, Moon, LogOut, User } from "lucide-react";
+import { useTheme } from "@/lib/theme-context";
 
 export default function Navbar() {
   const pathname = usePathname();
+  const { theme, toggleTheme } = useTheme();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [user, setUser] = useState<{ email: string; role: string; name: string } | null>(null);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -23,6 +20,51 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Sync session state from localStorage
+  useEffect(() => {
+    const checkSession = () => {
+      const session = localStorage.getItem("healflow-session");
+      if (session) {
+        try {
+          setUser(JSON.parse(session));
+        } catch {
+          setUser(null);
+        }
+      } else {
+        setUser(null);
+      }
+    };
+    checkSession();
+    const interval = setInterval(checkSession, 1000);
+    return () => clearInterval(interval);
+  }, []);
+
+  const handleLogout = () => {
+    localStorage.removeItem("healflow-session");
+    setUser(null);
+    window.location.href = "/";
+  };
+
+  // Determine links based on user role
+  const getNavLinks = () => {
+    if (user?.role === "doctor") {
+      return [
+        { href: "/doctor-dashboard", label: "Doctor Dashboard" },
+        { href: "/chat", label: "Patient Chats" },
+      ];
+    }
+    return [
+      { href: "/scan", label: "Skin Analyzer" },
+      { href: "/report", label: "Report Explainer" },
+      { href: "/doctors", label: "Find Doctors" },
+      { href: "/health-bot", label: "AI Health Bot" },
+      { href: "/chat", label: "My Chats" },
+      { href: "/reminders", label: "Reminders" },
+    ];
+  };
+
+  const navLinks = getNavLinks();
 
   return (
     <nav
@@ -40,11 +82,11 @@ export default function Navbar() {
         padding: "0 24px",
         transition: "all 0.3s ease",
         background: isScrolled
-          ? "rgba(13, 10, 30, 0.85)"
+          ? theme === "dark" ? "rgba(22, 18, 44, 0.85)" : "rgba(248, 247, 255, 0.85)"
           : "transparent",
         backdropFilter: isScrolled ? "blur(12px)" : "none",
         borderBottom: isScrolled
-          ? "1px solid rgba(255,255,255,0.1)"
+          ? theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)"
           : "1px solid transparent",
       }}
     >
@@ -76,18 +118,18 @@ export default function Navbar() {
             fontFamily: "var(--font-heading)",
             fontWeight: 700,
             fontSize: "20px",
-            color: "var(--text-white)",
+            color: "var(--text-primary)",
           }}
         >
-          MediScan
+          HealFlow
         </span>
         <span
           style={{
             fontFamily: "var(--font-heading)",
             fontWeight: 600,
             fontSize: "12px",
-            color: "var(--purple-light)",
-            background: "rgba(124,58,237,0.15)",
+            color: "white",
+            background: "linear-gradient(135deg, #7C3AED, #EC4899)",
             padding: "2px 8px",
             borderRadius: "6px",
             marginLeft: "-4px",
@@ -102,7 +144,7 @@ export default function Navbar() {
         style={{
           display: "flex",
           alignItems: "center",
-          gap: "32px",
+          gap: "24px",
         }}
         className="desktop-nav"
       >
@@ -114,10 +156,7 @@ export default function Navbar() {
               fontFamily: "var(--font-body)",
               fontWeight: 500,
               fontSize: "14px",
-              color:
-                pathname === link.href
-                  ? "var(--text-white)"
-                  : "var(--text-muted)",
+              color: pathname === link.href ? "var(--purple-primary)" : "var(--text-secondary)",
               textDecoration: "none",
               transition: "color 0.2s ease",
               position: "relative",
@@ -131,7 +170,7 @@ export default function Navbar() {
                   bottom: "-4px",
                   left: "50%",
                   transform: "translateX(-50%)",
-                  width: "20px",
+                  width: "16px",
                   height: "2px",
                   background: "var(--purple-primary)",
                   borderRadius: "1px",
@@ -141,45 +180,129 @@ export default function Navbar() {
           </Link>
         ))}
 
-        {/* CTA */}
-        <Link
-          href="/scan"
-          id="nav-cta-button"
+        {/* Theme Toggle Button */}
+        <button
+          onClick={toggleTheme}
           style={{
-            background: "linear-gradient(135deg, #7C3AED, #EC4899)",
-            color: "white",
-            fontFamily: "var(--font-body)",
-            fontWeight: 600,
-            fontSize: "14px",
-            padding: "10px 20px",
-            borderRadius: "10px",
-            textDecoration: "none",
-            boxShadow: "0 4px 16px rgba(124,58,237,0.35)",
-            transition: "all 0.2s ease",
+            background: "none",
+            border: "none",
+            color: "var(--text-primary)",
+            cursor: "pointer",
+            padding: "6px",
+            display: "flex",
+            alignItems: "center",
+            borderRadius: "50%",
+            transition: "background 0.2s",
           }}
+          className="hover:bg-slate-200 dark:hover:bg-slate-800"
+          title="Toggle Theme"
         >
-          Start Scanning
-        </Link>
+          {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
+        </button>
+
+        {/* User Account / Login */}
+        {user ? (
+          <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "6px",
+                fontFamily: "var(--font-body)",
+                fontSize: "13px",
+                fontWeight: 600,
+                color: "var(--text-primary)",
+              }}
+            >
+              <User size={16} style={{ color: "var(--purple-primary)" }} />
+              {user.name.split(" ")[0]}
+              <span
+                style={{
+                  fontSize: "10px",
+                  background: user.role === "doctor" ? "#FEF3C7" : "#D1FAE5",
+                  color: user.role === "doctor" ? "#92400E" : "#065F46",
+                  padding: "1px 6px",
+                  borderRadius: "4px",
+                  textTransform: "uppercase",
+                  fontWeight: 700,
+                }}
+              >
+                {user.role}
+              </span>
+            </div>
+            <button
+              onClick={handleLogout}
+              style={{
+                background: "none",
+                border: "none",
+                color: "var(--severity-high)",
+                cursor: "pointer",
+                padding: "6px",
+                display: "flex",
+                alignItems: "center",
+                borderRadius: "50%",
+              }}
+              title="Logout"
+            >
+              <LogOut size={16} />
+            </button>
+          </div>
+        ) : (
+          <Link
+            href="/login"
+            id="nav-login-button"
+            style={{
+              background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+              color: "white",
+              fontFamily: "var(--font-body)",
+              fontWeight: 600,
+              fontSize: "14px",
+              padding: "8px 18px",
+              borderRadius: "10px",
+              textDecoration: "none",
+              boxShadow: "0 4px 16px rgba(124,58,237,0.35)",
+              transition: "all 0.2s ease",
+            }}
+          >
+            Login / Signup
+          </Link>
+        )}
       </div>
 
-      {/* Mobile Menu Button */}
-      <button
-        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-        className="mobile-menu-btn"
-        aria-label="Toggle menu"
-        style={{
-          display: "none",
-          background: "none",
-          border: "none",
-          color: "var(--text-white)",
-          cursor: "pointer",
-          padding: "8px",
-        }}
-      >
-        {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
-      </button>
+      {/* Mobile Menu Actions */}
+      <div style={{ display: "none", alignItems: "center", gap: "12px" }} className="mobile-actions-row">
+        {/* Mobile Theme Toggle */}
+        <button
+          onClick={toggleTheme}
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--text-primary)",
+            cursor: "pointer",
+            padding: "6px",
+          }}
+        >
+          {theme === "dark" ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
 
-      {/* Mobile Menu */}
+        {/* Mobile Menu Button */}
+        <button
+          onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+          className="mobile-menu-btn"
+          aria-label="Toggle menu"
+          style={{
+            background: "none",
+            border: "none",
+            color: "var(--text-primary)",
+            cursor: "pointer",
+            padding: "8px",
+          }}
+        >
+          {isMobileMenuOpen ? <X size={24} /> : <Menu size={24} />}
+        </button>
+      </div>
+
+      {/* Mobile Menu Panel */}
       {isMobileMenuOpen && (
         <div
           className="mobile-menu"
@@ -188,13 +311,13 @@ export default function Navbar() {
             top: "64px",
             left: 0,
             right: 0,
-            background: "rgba(13, 10, 30, 0.95)",
+            background: theme === "dark" ? "rgba(22, 18, 44, 0.98)" : "rgba(248, 247, 255, 0.98)",
             backdropFilter: "blur(16px)",
             padding: "16px 24px",
             display: "flex",
             flexDirection: "column",
             gap: "16px",
-            borderBottom: "1px solid rgba(255,255,255,0.1)",
+            borderBottom: theme === "dark" ? "1px solid rgba(255,255,255,0.08)" : "1px solid rgba(0,0,0,0.08)",
           }}
         >
           {navLinks.map((link) => (
@@ -206,10 +329,7 @@ export default function Navbar() {
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
                 fontSize: "16px",
-                color:
-                  pathname === link.href
-                    ? "var(--text-white)"
-                    : "var(--text-muted)",
+                color: pathname === link.href ? "var(--purple-primary)" : "var(--text-secondary)",
                 textDecoration: "none",
                 padding: "8px 0",
               }}
@@ -217,33 +337,61 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          <Link
-            href="/scan"
-            onClick={() => setIsMobileMenuOpen(false)}
-            style={{
-              background: "linear-gradient(135deg, #7C3AED, #EC4899)",
-              color: "white",
-              fontFamily: "var(--font-body)",
-              fontWeight: 600,
-              fontSize: "14px",
-              padding: "12px 20px",
-              borderRadius: "10px",
-              textDecoration: "none",
-              textAlign: "center",
-            }}
-          >
-            Start Scanning
-          </Link>
+          
+          {user ? (
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", borderTop: "1px solid var(--border)", paddingTop: "12px", marginTop: "4px" }}>
+              <span style={{ fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>
+                👤 {user.name} ({user.role})
+              </span>
+              <button
+                onClick={() => {
+                  setIsMobileMenuOpen(false);
+                  handleLogout();
+                }}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  background: "none",
+                  border: "none",
+                  color: "var(--severity-high)",
+                  fontWeight: 600,
+                  fontSize: "14px",
+                  cursor: "pointer",
+                }}
+              >
+                Logout <LogOut size={16} />
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/login"
+              onClick={() => setIsMobileMenuOpen(false)}
+              style={{
+                background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                color: "white",
+                fontFamily: "var(--font-body)",
+                fontWeight: 600,
+                fontSize: "14px",
+                padding: "12px 20px",
+                borderRadius: "10px",
+                textDecoration: "none",
+                textAlign: "center",
+              }}
+            >
+              Login / Signup
+            </Link>
+          )}
         </div>
       )}
 
       <style jsx>{`
-        @media (max-width: 768px) {
+        @media (max-width: 992px) {
           .desktop-nav {
             display: none !important;
           }
-          .mobile-menu-btn {
-            display: block !important;
+          .mobile-actions-row {
+            display: flex !important;
           }
         }
       `}</style>

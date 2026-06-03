@@ -19,6 +19,16 @@ export default function ReportPage() {
     setResult(null);
     setIsLoading(true);
 
+    // Retrieve active patient session
+    let patientId = null;
+    try {
+      const sessionStr = localStorage.getItem("healflow-session");
+      if (sessionStr) {
+        const session = JSON.parse(sessionStr);
+        patientId = session.id || null;
+      }
+    } catch (e) {}
+
     try {
       const base64 = await fileToBase64(file);
       const isImage = file.type.startsWith("image/");
@@ -30,6 +40,7 @@ export default function ReportPage() {
           imageBase64: base64,
           mimeType: file.type,
           isImage: isImage,
+          patientId,
         }),
       });
 
@@ -148,19 +159,93 @@ export default function ReportPage() {
 
         {/* Upload Zone */}
         {!result && !isLoading && (
-          <UploadZone
-            onFileSelect={handleFileSelect}
-            acceptedTypes={[
-              "image/jpeg",
-              "image/png",
-              "image/webp",
-              "application/pdf",
-            ]}
-            maxSizeMB={10}
-            label="Upload medical report"
-            sublabel="PDF ya photo upload karo"
-            icon="document"
-          />
+          <>
+            <UploadZone
+              onFileSelect={handleFileSelect}
+              acceptedTypes={[
+                "image/jpeg",
+                "image/png",
+                "image/webp",
+                "application/pdf",
+              ]}
+              maxSizeMB={10}
+              label="Upload medical report"
+              sublabel="PDF ya photo upload karo"
+              icon="document"
+            />
+            
+            <div
+              style={{
+                marginTop: "16px",
+                display: "flex",
+                justifyContent: "center",
+              }}
+            >
+              <button
+                id="demo-report-btn"
+                onClick={async () => {
+                  try {
+                    setIsLoading(true);
+                    setError(null);
+
+                    // Retrieve active patient session
+                    let patientId = null;
+                    try {
+                      const sessionStr = localStorage.getItem("healflow-session");
+                      if (sessionStr) {
+                        const session = JSON.parse(sessionStr);
+                        patientId = session.id || null;
+                      }
+                    } catch (e) {}
+
+                    const demoText = `Complete Blood Count (CBC)
+Haemoglobin: 9.8 g/dL (Normal Range: 12.0 - 16.0)
+WBC Count: 11,500 /cumm (Normal Range: 4,000 - 11,000)
+Platelet Count: 250,000 /cumm (Normal Range: 150,000 - 450,000)
+RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
+
+                    const response = await fetch("/api/analyze/report", {
+                      method: "POST",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        reportText: demoText,
+                        isImage: false,
+                        patientId,
+                      }),
+                    });
+
+                    if (!response.ok) {
+                      throw new Error("Analysis failed. Please try again.");
+                    }
+
+                    const data: ReportAnalysis = await response.json();
+                    setResult(data);
+                  } catch (err) {
+                    setError(err instanceof Error ? err.message : "Something went wrong.");
+                  } finally {
+                    setIsLoading(false);
+                  }
+                }}
+                style={{
+                  padding: "8px 16px",
+                  background: "rgba(16,185,129,0.1)",
+                  border: "1px dashed rgba(16,185,129,0.3)",
+                  borderRadius: "8px",
+                  color: "#10b981",
+                  fontFamily: "var(--font-body)",
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "6px",
+                  transition: "all 0.2s ease",
+                }}
+              >
+                ✨ Try Demo Report (CBC Blood Test with Low Hb & High WBC)
+              </button>
+            </div>
+          </>
         )}
 
         {/* Loading */}

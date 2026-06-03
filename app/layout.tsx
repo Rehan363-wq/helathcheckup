@@ -1,13 +1,14 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import Navbar from "@/components/navbar";
+import { ThemeProvider } from "@/lib/theme-context";
 
 export const metadata: Metadata = {
-  title: "MediScan AI — Apna Doctor, Apni Zeb Mein",
+  title: "HealFlow AI — Apna Doctor, Apni Zeb Mein",
   description:
-    "AI-powered healthcare: Scan skin conditions, understand medical reports, and find verified doctors near you. MediScan AI se samjho, doctor se milo.",
+    "AI-powered healthcare: Scan skin conditions, understand medical reports, and find verified doctors near you. HealFlow AI se samjho, doctor se milo.",
   keywords: [
-    "MediScan",
+    "HealFlow",
     "AI healthcare",
     "skin analyzer",
     "medical report",
@@ -30,8 +31,10 @@ export default function RootLayout({
           flexDirection: "column",
         }}
       >
-        <Navbar />
-        <main style={{ flex: 1, paddingTop: "64px" }}>{children}</main>
+        <ThemeProvider>
+          <Navbar />
+          <main style={{ flex: 1, paddingTop: "64px" }}>{children}</main>
+        </ThemeProvider>
       </body>
     </html>
   );

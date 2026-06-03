@@ -5,7 +5,7 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { imageBase64, mimeType } = body;
+    const { imageBase64, mimeType, patientId } = body;
 
     if (!imageBase64 || !mimeType) {
       return Response.json(
@@ -59,6 +59,7 @@ export async function POST(request: NextRequest) {
     try {
       const supabase = createServiceClient();
       await supabase.from("scan_results").insert({
+        patient_id: patientId || null,
         condition: result.condition,
         confidence: result.confidence,
         severity: result.severity,
