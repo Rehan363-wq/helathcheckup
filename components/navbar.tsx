@@ -61,6 +61,7 @@ export default function Navbar() {
       { href: "/health-bot", label: "AI Health Bot" },
       { href: "/chat", label: "My Chats" },
       { href: "/reminders", label: "Reminders" },
+      { href: "/tracker", label: "Health Tracker" },
     ];
   };
 

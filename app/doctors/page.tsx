@@ -11,6 +11,7 @@ export default function DoctorsPage() {
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [maxFees, setMaxFees] = useState(1000);
   const [activeDoctor, setActiveDoctor] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
   const [loading, setLoading] = useState(true);
@@ -83,10 +84,20 @@ export default function DoctorsPage() {
 
   const specializations = useMemo(() => getUniqueSpecializations(doctors), [doctors]);
 
-  const filteredDoctors = useMemo(
-    () => filterDoctors(doctors, selectedSpecialization, maxFees),
-    [doctors, selectedSpecialization, maxFees]
-  );
+  const filteredDoctors = useMemo(() => {
+    let list = filterDoctors(doctors, selectedSpecialization, maxFees);
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase().trim();
+      list = list.filter(
+        (doc) =>
+          doc.name.toLowerCase().includes(q) ||
+          doc.specialization.toLowerCase().includes(q) ||
+          doc.area.toLowerCase().includes(q) ||
+          doc.city.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [doctors, selectedSpecialization, maxFees, searchQuery]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-surface)" }}>
@@ -131,6 +142,28 @@ export default function DoctorsPage() {
           }}
         >
           <Filter size={18} style={{ color: "var(--text-muted)" }} />
+
+          {/* Name/Area Search Input */}
+          <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
+            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
+            <input
+              type="text"
+              placeholder="Search doctor, specialization, or city..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                width: "100%",
+                padding: "8px 12px 8px 36px",
+                borderRadius: "8px",
+                border: "1px solid var(--border)",
+                background: "var(--bg-surface)",
+                color: "var(--text-primary)",
+                fontFamily: "var(--font-body)",
+                fontSize: "13px",
+                outline: "none",
+              }}
+            />
+          </div>
 
           {/* Specialization Filter */}
           <select

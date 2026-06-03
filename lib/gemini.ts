@@ -148,8 +148,10 @@ export async function analyzeReport(
 }
 
 // ============================================================
-// HEALTH CHATBOT — Prompt and Handler
+// HEALTH CHATBOT — Context-Aware with Patient Profile
 // ============================================================
+import { buildSmartHealthBotPrompt, buildDoctorAssistantPrompt } from "./smart-prompts";
+
 export const HEALTH_CHATBOT_PROMPT = `You are "HealFlow AI", an expert clinical triage assistant. You help users understand their symptoms and direct them to the appropriate medical care.
 
 ## Your Guidelines:
@@ -163,15 +165,18 @@ export const HEALTH_CHATBOT_PROMPT = `You are "HealFlow AI", an expert clinical 
 5. **JSON Response Format:** You MUST reply in a strict JSON format (no markdown, no backticks, no \`\`\`json wrap):
 
 {
-  "reply": "Your response text to the user in Hinglish. Be caring and explain clearly. E.g. 'Aapko 2 din se fever hai, ye viral infection ho sakta hai. Body ko rest do aur fluids piyo. Lekin agar fever 101 se upar jaye, toh General Physician ko dikhana chahiye.'",
+  "reply": "Your response text to the user in Hinglish.",
   "recommendedSpecialization": "Dermatologist" or "General Physician" or "Pathologist" or null,
-  "suggestedMedicine": "Medicine Name" or null
+  "suggestedMedicine": "Medicine Name" or null,
+  "healthAlert": null,
+  "relatedToCondition": null
 }
 
 Ensure the response is valid JSON that can be parsed directly.`;
 
 export async function runHealthChat(
-  history: { role: "user" | "model"; parts: string }[]
+  history: { role: "user" | "model"; parts: string }[],
+  patientContext?: string
 ): Promise<string> {
   const model = genAI.getGenerativeModel({
     model: MODEL_NAME,
@@ -182,10 +187,14 @@ export async function runHealthChat(
     },
   });
 
-  // Prepare contents with the system instruction prepended
+  // Use smart prompt if patient context is available, otherwise fallback to generic
+  const systemPrompt = patientContext
+    ? buildSmartHealthBotPrompt(patientContext)
+    : HEALTH_CHATBOT_PROMPT;
+
   const contents = [
-    { role: "user", parts: [{ text: HEALTH_CHATBOT_PROMPT }] },
-    { role: "model", parts: [{ text: "Understood. I will act as the HealFlow AI triage bot and output strict JSON." }] },
+    { role: "user" as const, parts: [{ text: systemPrompt }] },
+    { role: "model" as const, parts: [{ text: "Understood. I will act as HealFlow AI with full patient context and output strict JSON." }] },
     ...history.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.parts }],
@@ -195,3 +204,67 @@ export async function runHealthChat(
   const result = await model.generateContent({ contents });
   return result.response.text();
 }
+
+// ============================================================
+// DOCTOR ASSISTANT — AI-Powered Patient Briefing
+// ============================================================
+
+export async function runDoctorAssistant(
+  doctorContext: string,
+  patientSummary: string,
+  additionalQuery?: string
+): Promise<string> {
+  const model = genAI.getGenerativeModel({
+    model: MODEL_NAME,
+    generationConfig: {
+      temperature: 0.3, // Lower temp for clinical accuracy
+      topP: 0.8,
+      maxOutputTokens: 1500,
+    },
+  });
+
+  const systemPrompt = buildDoctorAssistantPrompt(doctorContext, patientSummary);
+
+  const contents = [
+    { role: "user" as const, parts: [{ text: systemPrompt }] },
+    { role: "model" as const, parts: [{ text: "Understood. I will analyze the patient data and provide a structured clinical brief in JSON format." }] },
+    { role: "user" as const, parts: [{ text: additionalQuery || "Generate a complete patient brief for this consultation." }] },
+  ];
+
+  const result = await model.generateContent({ contents });
+  return result.response.text();
+}
+
+// ============================================================
+// HEALTH COACH — Daily Health Tracking AI
+// ============================================================
+import { HEALTH_COACH_SYSTEM_PROMPT } from "./health-coach-prompt";
+
+export async function runHealthCoach(
+  healthDataJson: string,
+  history: { role: "user" | "model"; parts: string }[]
+): Promise<string> {
+  const model = genAI.getGenerativeModel({
+    model: MODEL_NAME,
+    generationConfig: {
+      temperature: 0.5,   // Warm and friendly while remaining accurate
+      topP: 0.85,
+      maxOutputTokens: 1024,
+    },
+  });
+
+  const contents = [
+    { role: "user" as const, parts: [{ text: HEALTH_COACH_SYSTEM_PROMPT }] },
+    { role: "model" as const, parts: [{ text: "Understood. I am MediScan Health Coach. I will respond in Hinglish with strict JSON format." }] },
+    { role: "user" as const, parts: [{ text: `Current user health data:\n${healthDataJson}` }] },
+    { role: "model" as const, parts: [{ text: '{"reply": "Data received. Ready to help!", "daily_score": null, "alert": null, "tip": null}' }] },
+    ...history.map((msg) => ({
+      role: msg.role as "user" | "model",
+      parts: [{ text: msg.parts }],
+    })),
+  ];
+
+  const result = await model.generateContent({ contents });
+  return result.response.text();
+}
+

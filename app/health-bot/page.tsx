@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Send, Bot, User, Stethoscope, Clock, ShieldAlert, Sparkles } from "lucide-react";
+import { buildPatientContextForAI } from "@/lib/user-profile";
 
 interface Message {
   id: string;
@@ -57,7 +58,7 @@ export default function HealthBotPage() {
       const res = await fetch("/api/chat/bot", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: history }),
+        body: JSON.stringify({ messages: history, patientContext: buildPatientContextForAI() }),
       });
 
       if (!res.ok) throw new Error("Failed to call chatbot");

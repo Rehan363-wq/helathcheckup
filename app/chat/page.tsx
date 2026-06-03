@@ -236,21 +236,22 @@ export default function ChatPage() {
     // Simulate doctor replies in Sandbox Mode
     if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
       setLoading(true);
-      setTimeout(() => {
-        // Mock a reply using basic rules or Gemini
-        let doctorReply = "Ji, main aapki problem samajh raha hoon. Aap please rest karein aur fluids piyo. Agar problem badhti hai, toh consultation ke liye clinic visit karein.";
-        
-        if (selectedDoctor.specialization === "Dermatologist") {
-          if (userMsgContent.toLowerCase().includes("rash") || userMsgContent.toLowerCase().includes("fungal")) {
-            doctorReply = "Aapke skin rashes fungal lag rahe hain. Area ko bilkul dry rakhein aur shared towels bilkul use na karein. OTC clotrimazole cream twice daily apply karein.";
-          } else {
-            doctorReply = "Skin complications ke liye photo upload analyzer ka use karein, aur patches par moisturizing lotion apply karein.";
-          }
-        } else if (selectedDoctor.specialization === "General Physician") {
-          if (userMsgContent.toLowerCase().includes("fever") || userMsgContent.toLowerCase().includes("b बुखार")) {
-            doctorReply = "Halka fever hai toh paracetamol (650mg) tablet 6 ghante ke intervals mein lein agar body temperature high hota hai. Cold compress use karein aur rest karein.";
-          }
-        }
+      try {
+        const { loadPatientProfile } = await import("@/lib/user-profile");
+        const patientProfile = loadPatientProfile();
+
+        const response = await fetch("/api/chat/doctor", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            messages: [...messages, newMsg],
+            doctorProfile: selectedDoctor,
+            patientProfile: patientProfile,
+          }),
+        });
+
+        const data = await response.json();
+        const doctorReply = data.reply || "Ji, main aapki problem samajh raha hoon. Please details share karein.";
 
         const replyMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -264,8 +265,22 @@ export default function ChatPage() {
           localStorage.setItem(mockKey, JSON.stringify(updated));
           return updated;
         });
+      } catch (err) {
+        console.error("AI Doctor chat sandbox error:", err);
+        const replyMsg: ChatMessage = {
+          id: (Date.now() + 1).toString(),
+          sender_id: selectedDoctor.id,
+          content: "Ji, main aapki problem samajh raha hoon. Please standard medications lein aur warning signs par click checkup karein.",
+          created_at: new Date().toISOString(),
+        };
+        setMessages((prev) => {
+          const updated = [...prev, replyMsg];
+          localStorage.setItem(mockKey, JSON.stringify(updated));
+          return updated;
+        });
+      } finally {
         setLoading(false);
-      }, 1500);
+      }
     }
   };
 
@@ -317,7 +332,9 @@ export default function ChatPage() {
                 gap: "12px",
                 padding: "16px 20px",
                 background: selectedDoctor?.id === doc.id ? "rgba(124,58,237,0.06)" : "transparent",
-                border: "none",
+                borderTop: "none",
+                borderLeft: "none",
+                borderRight: "none",
                 borderBottom: "1px solid rgba(0,0,0,0.03)",
                 textAlign: "left",
                 cursor: "pointer",

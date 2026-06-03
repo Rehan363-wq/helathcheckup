@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { isOnboardingCompleted, syncProfileToLocalStorage } from "@/lib/user-profile";
 import { User, Mail, Lock, ShieldAlert, Award, FileText, IndianRupee, Key } from "lucide-react";
 
 export default function LoginPage() {
@@ -30,39 +31,48 @@ export default function LoginPage() {
     console.warn("Supabase client not initialized:", e);
   }
 
-  const handleAuth = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performAuthProcess = async (
+    targetEmail: string,
+    targetPass: string,
+    targetRole: "patient" | "doctor",
+    isSigningUp: boolean,
+    targetName: string,
+    targetSpec: string = "General Physician",
+    targetDegree: string = "",
+    targetFees: string = "300"
+  ) => {
     setError(null);
     setSandboxInfo(null);
     setLoading(true);
 
-    if (!email || !password || (isSignUp && !name)) {
+    if (!targetEmail || !targetPass || (isSigningUp && !targetName)) {
       setError("Please fill out all fields.");
       setLoading(false);
       return;
     }
 
-    // Check if it's a demo credential or if Supabase is missing
-    // Check if it's a demo credential or if Supabase is missing
-    const isDemo = email.includes("demo-") || email === "patient@healflow.ai" || email === "doctor@healflow.ai" || email === "patient@mediscan.ai" || email === "doctor@mediscan.ai";
+    const isDemo = targetEmail.includes("demo-") || targetEmail === "patient@healflow.ai" || targetEmail === "doctor@healflow.ai" || targetEmail === "patient@mediscan.ai" || targetEmail === "doctor@mediscan.ai";
     const supabaseMissing = !supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (isDemo || supabaseMissing) {
       // Simulate login using local storage sandbox session
       setTimeout(() => {
         const mockUser = {
-          email: email.trim(),
-          role: role,
-          name: name || (role === "doctor" ? "Dr. Demo Account" : "Demo Patient"),
+          email: targetEmail.trim(),
+          role: targetRole,
+          name: targetName || (targetRole === "doctor" ? "Dr. Demo Account" : "Demo Patient"),
           isSandbox: true,
-          specialization: role === "doctor" ? specialization : undefined,
-          degree: role === "doctor" ? degree || "MBBS" : undefined,
-          fees: role === "doctor" ? Number(fees) : undefined,
+          specialization: targetRole === "doctor" ? targetSpec : undefined,
+          degree: targetRole === "doctor" ? targetDegree || "MBBS" : undefined,
+          fees: targetRole === "doctor" ? Number(targetFees) : undefined,
         };
         localStorage.setItem("healflow-session", JSON.stringify(mockUser));
         setLoading(false);
-        
-        if (role === "doctor") {
+
+        // Route: new signup → onboarding, returning user → dashboard
+        if (isSigningUp || !isOnboardingCompleted(targetRole)) {
+          router.push("/onboarding");
+        } else if (targetRole === "doctor") {
           router.push("/doctor-dashboard");
         } else {
           router.push("/");
@@ -72,18 +82,18 @@ export default function LoginPage() {
     }
 
     try {
-      if (isSignUp) {
+      if (isSigningUp) {
         // Sign Up with Supabase Auth
         const { data, error: signUpError } = await supabase.auth.signUp({
-          email,
-          password,
+          email: targetEmail,
+          password: targetPass,
           options: {
             data: {
-              full_name: name,
-              role: role,
-              specialization: role === "doctor" ? specialization : null,
-              degree: role === "doctor" ? degree : null,
-              fees: role === "doctor" ? Number(fees) : null,
+              full_name: targetName,
+              role: targetRole,
+              specialization: targetRole === "doctor" ? targetSpec : null,
+              degree: targetRole === "doctor" ? targetDegree : null,
+              fees: targetRole === "doctor" ? Number(targetFees) : null,
             },
           },
         });
@@ -97,8 +107,8 @@ export default function LoginPage() {
       } else {
         // Sign In with Supabase Auth
         const { data, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password,
+          email: targetEmail,
+          password: targetPass,
         });
 
         if (signInError) throw signInError;
@@ -111,15 +121,36 @@ export default function LoginPage() {
             .eq("id", data.session.user.id)
             .single();
 
+          const activeRole = profile?.role || targetRole;
+
+          // Fetch reports if role is patient
+          let reports = [];
+          if (activeRole === "patient") {
+            const { data: reportsData } = await supabase
+              .from("uploaded_reports")
+              .select("*")
+              .eq("user_id", data.session.user.id);
+            if (reportsData) {
+              reports = reportsData;
+            }
+          }
+
+          if (profile) {
+            syncProfileToLocalStorage(activeRole as "patient" | "doctor", profile, reports);
+          }
+
           const activeUser = {
             id: data.session.user.id,
             email: data.session.user.email,
-            role: profile?.role || role,
-            name: profile?.full_name || name || data.session.user.email,
+            role: activeRole,
+            name: profile?.full_name || targetName || data.session.user.email,
           };
           localStorage.setItem("healflow-session", JSON.stringify(activeUser));
 
-          if (activeUser.role === "doctor") {
+          // Route based on onboarding status
+          if (!isOnboardingCompleted(activeUser.role as "patient" | "doctor")) {
+            router.push("/onboarding");
+          } else if (activeUser.role === "doctor") {
             router.push("/doctor-dashboard");
           } else {
             router.push("/");
@@ -130,16 +161,16 @@ export default function LoginPage() {
       console.warn("Supabase Auth failed, using local sandbox flow:", err);
       // Fallback sandbox login
       const fallbackUser = {
-        email: email.trim(),
-        role: role,
-        name: name || (role === "doctor" ? "Dr. Local Account" : "Local Patient"),
+        email: targetEmail.trim(),
+        role: targetRole,
+        name: targetName || (targetRole === "doctor" ? "Dr. Local Account" : "Local Patient"),
         isSandbox: true,
       };
       localStorage.setItem("healflow-session", JSON.stringify(fallbackUser));
       setSandboxInfo("Supabase database offline or login failed. Accessing app in Sandboxed Mode.");
       
       setTimeout(() => {
-        if (role === "doctor") {
+        if (targetRole === "doctor") {
           router.push("/doctor-dashboard");
         } else {
           router.push("/");
@@ -150,14 +181,27 @@ export default function LoginPage() {
     }
   };
 
+  const handleAuth = async (e: React.FormEvent) => {
+    e.preventDefault();
+    performAuthProcess(email, password, role, isSignUp, name, specialization, degree, fees);
+  };
+
   const handleQuickLogin = (demoRole: "patient" | "doctor") => {
+    const emailVal = demoRole === "patient" ? "demo-patient@healflow.ai" : "demo-doctor@healflow.ai";
+    const passwordVal = "password";
+    const nameVal = demoRole === "patient" ? "Demo Patient" : "Dr. Priya Sharma";
+    const degreeVal = demoRole === "doctor" ? "MBBS, MD" : "";
+    const feesVal = "300";
+
     setRole(demoRole);
     setIsSignUp(false);
-    setEmail(demoRole === "patient" ? "demo-patient@healflow.ai" : "demo-doctor@healflow.ai");
-    setPassword("password");
-    setName(demoRole === "patient" ? "Demo Patient" : "Dr. Priya Sharma");
-    setDegree(demoRole === "doctor" ? "MBBS, MD" : "");
-    setFees("300");
+    setEmail(emailVal);
+    setPassword(passwordVal);
+    setName(nameVal);
+    setDegree(degreeVal);
+    setFees(feesVal);
+
+    performAuthProcess(emailVal, passwordVal, demoRole, false, nameVal, "General Physician", degreeVal, feesVal);
   };
 
   return (
@@ -211,9 +255,11 @@ export default function LoginPage() {
               fontSize: "14px",
               fontWeight: 600,
               color: role === "patient" ? "var(--purple-primary)" : "var(--text-secondary)",
+              borderTop: "none",
+              borderLeft: "none",
+              borderRight: "none",
               borderBottom: role === "patient" ? "2px solid var(--purple-primary)" : "none",
               background: "none",
-              border: "none",
               cursor: "pointer",
             }}
           >
@@ -228,9 +274,11 @@ export default function LoginPage() {
               fontSize: "14px",
               fontWeight: 600,
               color: role === "doctor" ? "var(--purple-primary)" : "var(--text-secondary)",
+              borderTop: "none",
+              borderLeft: "none",
+              borderRight: "none",
               borderBottom: role === "doctor" ? "2px solid var(--purple-primary)" : "none",
               background: "none",
-              border: "none",
               cursor: "pointer",
             }}
           >

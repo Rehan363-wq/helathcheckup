@@ -4,7 +4,7 @@ import { NextRequest } from "next/server";
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { messages } = body;
+    const { messages, patientContext } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return Response.json({ error: "messages array is required" }, { status: 400 });
@@ -15,7 +15,9 @@ export async function POST(request: NextRequest) {
         { 
           reply: "Oops! Gemini API key missing. Add GOOGLE_GEMINI_API_KEY in .env.local to activate the AI Chatbot.",
           recommendedSpecialization: null,
-          suggestedMedicine: null
+          suggestedMedicine: null,
+          healthAlert: null,
+          relatedToCondition: null
         }
       );
     }
@@ -26,7 +28,7 @@ export async function POST(request: NextRequest) {
       parts: m.content,
     }));
 
-    const rawResponse = await runHealthChat(formattedHistory);
+    const rawResponse = await runHealthChat(formattedHistory, patientContext || undefined);
 
     // Clean JSON response
     const cleanedText = rawResponse

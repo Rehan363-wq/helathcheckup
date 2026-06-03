@@ -1,5 +1,3 @@
-@import url('https://fonts.googleapis.com/css2?family=Syne:wght@600;700;800&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&display=swap');
-
 @import "tailwindcss";
 
 /* ===== CSS Custom Properties (Design Tokens) ===== */
@@ -38,9 +36,9 @@
   --shadow-dark: 0 8px 32px rgba(0,0,0,0.5);
   --shadow-purple: 0 8px 32px rgba(124,58,237,0.15);
 
-  /* Font families */
-  --font-heading: 'Syne', sans-serif;
-  --font-body: 'DM Sans', sans-serif;
+  /* Fallback Font Families (overridden by next/font/google dynamically) */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Plus Jakarta Sans', sans-serif;
 }
 
 /* Light Mode Overrides */
@@ -76,30 +74,66 @@ body {
   font-family: var(--font-body);
   color: var(--text-primary);
   background: var(--bg-surface);
+  line-height: 1.6;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure form controls inherit the clean design system fonts */
+button, input, select, textarea {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
 }
 
 /* ===== Typography ===== */
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
-  line-height: 1.2;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
 }
 
 h1 {
   font-size: 3rem;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.025em;
+  font-weight: 800;
 }
 
 h2 {
   font-size: 2rem;
-  letter-spacing: -0.01em;
+  letter-spacing: -0.02em;
+  font-weight: 700;
 }
 
 h3 {
   font-size: 1.375rem;
   font-weight: 600;
+}
+
+/* Typography Utility Classes */
+.text-label {
+  font-family: var(--font-body);
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--text-secondary);
+}
+
+.text-caption {
+  font-family: var(--font-body);
+  font-size: 12px;
+  font-weight: 300;
+  color: var(--text-muted);
+}
+
+.text-body-small {
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 400;
+  line-height: 1.5;
 }
 
 /* ===== Animations ===== */
@@ -207,3 +241,47 @@ h3 {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--purple-light);
 }
+
+/* ===== Premium Overrides & Smooth UX ===== */
+.serif-italic {
+  font-family: var(--font-serif), Georgia, serif !important;
+  font-style: italic !important;
+  font-weight: 400 !important;
+}
+
+.smooth-transition {
+  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hover-premium {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
+.hover-premium:hover {
+  transform: translateY(-6px) !important;
+  box-shadow: var(--shadow-purple) !important;
+  border-color: rgba(124, 58, 237, 0.3) !important;
+}
+
+.glow-point {
+  position: relative;
+}
+
+.glow-point::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: var(--purple-primary);
+  opacity: 0.4;
+  animation: pulse-glow-dot 2s infinite;
+}
+
+@keyframes pulse-glow-dot {
+  0% { transform: scale(1); opacity: 0.6; }
+  100% { transform: scale(2.5); opacity: 0; }
+}
+

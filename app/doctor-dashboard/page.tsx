@@ -3,7 +3,8 @@
 import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { Send, User, MessageSquare, ArrowLeft, Heart, Award, CreditCard, Star } from "lucide-react";
+import { Send, User, MessageSquare, ArrowLeft, Heart, Award, CreditCard, Star, Brain, Loader2 } from "lucide-react";
+import { loadPatientProfile, buildPatientSummaryForDoctor, buildDoctorContextForAI } from "@/lib/user-profile";
 
 interface Patient {
   id: string;
@@ -30,6 +31,8 @@ export default function DoctorDashboardPage() {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
   const [dbStatus, setDbStatus] = useState<string | null>(null);
+  const [aiSummary, setAiSummary] = useState<any>(null);
+  const [aiLoading, setAiLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   // Initialize client safely
@@ -355,7 +358,9 @@ export default function DoctorDashboardPage() {
                     gap: "12px",
                     padding: "16px 20px",
                     background: selectedPatient?.id === pat.id ? "rgba(124,58,237,0.06)" : "transparent",
-                    border: "none",
+                    borderTop: "none",
+                    borderLeft: "none",
+                    borderRight: "none",
                     borderBottom: "1px solid rgba(0,0,0,0.03)",
                     textAlign: "left",
                     cursor: "pointer",
@@ -458,7 +463,71 @@ export default function DoctorDashboardPage() {
                       Patient Consultation Session
                     </p>
                   </div>
+                  {/* AI Summary Button */}
+                  <button
+                    onClick={async () => {
+                      setAiLoading(true);
+                      setAiSummary(null);
+                      try {
+                        const res = await fetch("/api/doctor/assistant", {
+                          method: "POST",
+                          headers: { "Content-Type": "application/json" },
+                          body: JSON.stringify({
+                            doctorContext: buildDoctorContextForAI(),
+                            patientSummary: buildPatientSummaryForDoctor(),
+                          }),
+                        });
+                        const data = await res.json();
+                        setAiSummary(data);
+                      } catch (err) { console.error(err); }
+                      setAiLoading(false);
+                    }}
+                    disabled={aiLoading}
+                    style={{
+                      marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px",
+                      padding: "8px 16px", borderRadius: "10px", border: "none",
+                      background: "rgba(139,92,246,0.08)", color: "#8B5CF6",
+                      fontSize: "12px", fontWeight: 700, cursor: aiLoading ? "not-allowed" : "pointer",
+                      fontFamily: "var(--font-body)", transition: "all 0.2s",
+                    }}
+                  >
+                    {aiLoading ? <><Loader2 size={14} className="animate-spin" /> Analyzing...</> : <><Brain size={14} /> AI Summary</>}
+                  </button>
                 </div>
+
+                {/* AI Summary Panel */}
+                {aiSummary && (
+                  <div style={{
+                    padding: "16px 24px", background: "rgba(139,92,246,0.03)",
+                    borderBottom: "1px solid var(--border)",
+                    display: "flex", flexDirection: "column", gap: "10px",
+                  }}>
+                    <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#8B5CF6", textTransform: "uppercase", letterSpacing: "0.05em" }}>🤖 AI Patient Brief</span>
+                      <button onClick={() => setAiSummary(null)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "12px" }}>✕</button>
+                    </div>
+                    <p style={{ margin: 0, fontSize: "13px", color: "var(--text-primary)", lineHeight: 1.6 }}>{aiSummary.patient_brief}</p>
+                    {aiSummary.key_risk_factors?.length > 0 && (
+                      <div>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#EF4444" }}>⚠️ Risk Factors:</span>
+                        <span style={{ fontSize: "12px", color: "var(--text-secondary)", marginLeft: "4px" }}>{aiSummary.key_risk_factors.join(", ")}</span>
+                      </div>
+                    )}
+                    {aiSummary.suggested_questions?.length > 0 && (
+                      <div>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#3B82F6" }}>❓ Suggested Questions:</span>
+                        <ul style={{ margin: "4px 0 0", paddingLeft: "16px" }}>
+                          {aiSummary.suggested_questions.slice(0, 3).map((q: string, i: number) => (
+                            <li key={i} style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5 }}>{q}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {aiSummary.consultation_tip && (
+                      <p style={{ margin: 0, fontSize: "12px", color: "#10B981", fontWeight: 600 }}>💡 {aiSummary.consultation_tip}</p>
+                    )}
+                  </div>
+                )}
 
                 {/* Messages stream */}
                 <div
