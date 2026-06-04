@@ -7,6 +7,7 @@ import {
   buildHealthDataForAI, loadChatHistory, saveChatHistory,
   type HealthChatMessage,
 } from "@/lib/health-tracker";
+import { loadPatientProfile } from "@/lib/user-profile";
 
 export default function HealthCoachChat() {
   const [messages, setMessages] = useState<HealthChatMessage[]>([]);
@@ -15,11 +16,11 @@ export default function HealthCoachChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const starterPrompts = [
-    "Aaj ka summary do",
-    "Lunch mein 2 roti, dal, dahi khaya — kaisa raha?",
-    "30 minute walk kar aaya",
-    "Neend achi nahi aa rahi kuch din se",
-    "Weekly insight do",
+    "Give me today's summary",
+    "I had 2 rotis, dal, and yogurt for lunch — how was it?",
+    "I went for a 30-minute walk",
+    "I haven't been sleeping well lately",
+    "Give me weekly insights",
   ];
 
   useEffect(() => {
@@ -30,7 +31,7 @@ export default function HealthCoachChat() {
       setMessages([{
         id: "initial",
         role: "assistant",
-        content: "Namaste! 🙏 Main aapka Health Coach hoon. Aaj aapne kya khaya, kitna walk kiya, ya neend kaisi rahi — kuch bhi batao, main aapko personalized health insights dunga. Shuru karein? 💪",
+        content: "Hello! 🙏 I am your AI Health Coach. Share details about your diet, workouts, sleep, or symptoms, and I will provide personalized health insights. Shall we begin? 💪",
         timestamp: new Date().toISOString(),
       }]);
     }
@@ -61,6 +62,8 @@ export default function HealthCoachChat() {
       const todayLog = loadTodayLog();
       const weekHistory = loadWeekHistory();
       const healthData = buildHealthDataForAI(profile, todayLog, weekHistory);
+      const patientProfile = loadPatientProfile();
+      const lang = patientProfile?.language_preference || "hinglish";
 
       // Only send last 10 messages as history to keep token count reasonable
       const recentHistory = updatedMessages.slice(-10).map(m => ({
@@ -78,15 +81,20 @@ export default function HealthCoachChat() {
           "Content-Type": "application/json",
           "Authorization": `Bearer ${token}`
         },
-        body: JSON.stringify({ healthData, messages: recentHistory }),
+        body: JSON.stringify({ healthData, messages: recentHistory, languagePreference: lang }),
       });
 
       if (!res.ok) throw new Error("Failed to call Health Coach");
       const data = await res.json();
 
-      let replyContent = data.reply || "Kuch samajh nahi aaya. Dobara try karein.";
+      let replyContent = data.reply || "I couldn't process that. Please try again.";
       if (data.tip) replyContent += `\n\n💡 Tip: ${data.tip}`;
-      if (data.daily_score) replyContent += `\n\n📊 Aaj ka Health Score: ${data.daily_score}/10 🌟`;
+      if (data.daily_score) {
+        let scoreLabel = "Today's Health Score";
+        if (lang === "hindi") scoreLabel = "आज का हेल्थ स्कोर";
+        else if (lang === "hinglish") scoreLabel = "Aaj ka Health Score";
+        replyContent += `\n\n📊 ${scoreLabel}: ${data.daily_score}/10 🌟`;
+      }
 
       const assistantMessage: HealthChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -113,7 +121,7 @@ export default function HealthCoachChat() {
       const errorMessage: HealthChatMessage = {
         id: (Date.now() + 1).toString(),
         role: "assistant",
-        content: "Sorry, abhi response generate nahi ho pa raha. Server issue ho sakta hai. Dobara try karein.",
+        content: "Sorry, I cannot generate a response right now. There might be a server issue. Please try again.",
         timestamp: new Date().toISOString(),
       };
       const newMessages = [...updatedMessages, errorMessage];
@@ -156,7 +164,7 @@ export default function HealthCoachChat() {
             HealFlow Health Coach
           </h1>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", opacity: 0.85, margin: 0, display: "flex", alignItems: "center", gap: "4px" }}>
-            <Sparkles size={12} /> Gemini 2.5 Flash • Hinglish Health Insights
+            <Sparkles size={12} /> Gemini 2.5 Flash • Personalized Health Insights
           </p>
         </div>
       </div>
@@ -235,7 +243,7 @@ export default function HealthCoachChat() {
       <div style={{ padding: "8px 24px", background: "rgba(245,158,11,0.04)", borderTop: "1px solid var(--border)", display: "flex", alignItems: "center", gap: "8px" }}>
         <ShieldAlert size={14} style={{ color: "var(--accent-yellow)", flexShrink: 0 }} />
         <p style={{ fontFamily: "var(--font-body)", fontSize: "10px", color: "var(--text-secondary)", margin: 0 }}>
-          <strong>Disclaimer:</strong> Health Coach tracking aur wellness tips deta hai — medical diagnosis nahi. Serious symptoms mein doctor se milein.
+          <strong>Disclaimer:</strong> The Health Coach provides wellness tracking and tips, not medical diagnoses. For serious symptoms, consult a doctor.
         </p>
       </div>
 
@@ -249,11 +257,12 @@ export default function HealthCoachChat() {
           value={input}
           onChange={(e) => setInput(e.target.value)}
           disabled={loading}
-          placeholder="Apna khaana, walk, neend — kuch bhi batao..."
+          placeholder="Share your diet, walk, sleep, or wellness details..."
+          className="chat-input"
           style={{
             flex: 1, padding: "12px 18px", borderRadius: "12px", border: "1px solid var(--border)",
             background: "var(--bg-card)", color: "var(--text-primary)", fontFamily: "var(--font-body)",
-            fontSize: "14px", outline: "none",
+            fontSize: "14px", outline: "none", transition: "all 0.2s ease",
           }}
         />
         <button type="submit" disabled={loading || !input.trim()} style={{
@@ -267,6 +276,12 @@ export default function HealthCoachChat() {
           <Send size={18} />
         </button>
       </form>
+      <style jsx>{`
+        .chat-input:focus {
+          border-color: var(--purple-primary) !important;
+          box-shadow: 0 0 0 2px var(--purple-glow);
+        }
+      `}</style>
     </div>
   );
 }

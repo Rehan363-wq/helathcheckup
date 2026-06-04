@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Activity, Sun, Moon, LogOut, User, PhoneCall } from "lucide-react";
+import { Menu, X, Activity, Sun, Moon, LogOut, User } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { isOnboardingCompleted } from "@/lib/user-profile";
 
@@ -188,39 +188,8 @@ export default function Navbar() {
         </span>
       </Link>
 
-      {/* Persistent Emergency Call Button and Navigation controls */}
+      {/* Navigation controls */}
       <div style={{ display: "flex", alignItems: "center", gap: "20px" }}>
-        
-        {/* Persistent Emergency Button */}
-        {pathname !== "/login" && pathname !== "/onboarding" && (
-          <a
-            href="tel:112"
-            onClick={(e) => {
-              e.preventDefault();
-              alert("SIMULATING EMERGENCY CALL: Connecting with HealFlow Emergency Dispatch (Dialing 112)...");
-            }}
-            style={{
-              background: "var(--severity-high)",
-              color: "white",
-              fontWeight: 700,
-              fontSize: "12px",
-              padding: "7px 14px",
-              borderRadius: "100px",
-              textDecoration: "none",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "6px",
-              boxShadow: "0 4px 12px rgba(255, 59, 48, 0.2)",
-              transition: "transform 0.2s ease, opacity 0.2s",
-              border: "none",
-              cursor: "pointer",
-            }}
-            className="hover:scale-105 active:scale-95 duration-150"
-          >
-            <PhoneCall size={12} />
-            <span className="emergency-label">Emergency Call (112)</span>
-          </a>
-        )}
 
         {/* Desktop Nav Links */}
         <div

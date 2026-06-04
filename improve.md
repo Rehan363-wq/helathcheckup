@@ -21,6 +21,12 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 ### 5. Unified Global Theme & Font Styling Polish
 - **Fix**: Polished core layout CSS design variables, corrected dark mode report cards to use `rgba` transparencies, and added dynamic browser tab title handlers for all routes.
 
+### 6. Emergency Button & Global Hinglish Clean-Up
+- **Fix**: Removed the navigation bar emergency dialer and translated all residual Hinglish prompts, fallbacks, placeholders, and error messages to clean English.
+
+### 7. Doctor Dashboard Responsiveness & Styling Highlights
+- **Fix**: Corrected doctor dashboard responsive layout query constraint for mobile devices, standardized highlights to CSS custom properties, and added focus outline borders.
+
 ---
 
 ## 🛠️ Implementation Progress Tracker
@@ -35,3 +41,10 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 - [x] Task 8: Implement dynamic page transitions screen loader (`app/loading.tsx`)
 - [x] Task 9: Secure admin credentials and add authorization session checks to all API routes
 - [x] Task 10: Build a local storage Backup & Recovery manager on `/profile`
+- [x] Task 11: Remove navbar emergency button and translate remaining Hinglish UI prompts globally
+- [x] Task 12: Audit and enhance Doctor Dashboard layout responsiveness and theme compliance
+- [x] Task 13: Clean residual Hinglish labels in page chrome (`app/report/page.tsx`, `app/tracker/chat/page.tsx`)
+- [x] Task 14: Support dynamic user language preference in AI Health Coach system prompt and client UI
+- [x] Task 15: Support dynamic user language preference in AI Doctor Consultation Chat POST endpoint
+- [x] Task 16: Support dynamic user language preference in AI skin analysis and AI report analysis prompts
+- [x] Task 17: Build compile verification and update STATE.md / walkthrough.md

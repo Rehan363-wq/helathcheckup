@@ -94,7 +94,7 @@ export default function ChatPage() {
       const approvedLocal = localDocs.filter((d: any) => d.is_approved === true);
       const formatted = approvedLocal.map((d: any) => ({
         id: d.id,
-        full_name: d.name,
+        full_name: d.name || d.full_name || "Doctor",
         role: "doctor",
         specialization: d.specialization,
       }));
@@ -179,7 +179,7 @@ export default function ChatPage() {
         const greetMsg: ChatMessage = {
           id: "greet",
           sender_id: selectedDoctor.id,
-          content: `Hello! Main ${selectedDoctor.full_name} (${selectedDoctor.specialization}) hoon. Aapko kya health symptoms aa rahe hain, detail mein share karein.`,
+          content: `Hello! I am ${selectedDoctor.full_name} (${selectedDoctor.specialization}). Please share your health symptoms in detail so that I can assist you.`,
           created_at: new Date().toISOString(),
         };
         setMessages([greetMsg]);
@@ -262,7 +262,7 @@ export default function ChatPage() {
         });
 
         const data = await response.json();
-        const doctorReply = data.reply || "Ji, main aapki problem samajh raha hoon. Please details share karein.";
+        const doctorReply = data.reply || "Yes, I understand your concern. Please share the details so I can guide you further.";
 
         const replyMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
@@ -281,7 +281,7 @@ export default function ChatPage() {
         const replyMsg: ChatMessage = {
           id: (Date.now() + 1).toString(),
           sender_id: selectedDoctor.id,
-          content: "Ji, main aapki problem samajh raha hoon. Please standard medications lein aur warning signs par click checkup karein.",
+          content: "I understand your symptoms. Please follow standard self-care guidelines and let me know if you experience any worsening signs.",
           created_at: new Date().toISOString(),
         };
         setMessages((prev) => {
@@ -512,6 +512,7 @@ export default function ChatPage() {
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 placeholder={`Type a message to ${selectedDoctor.full_name}...`}
+                className="chat-input"
                 style={{
                   flex: 1,
                   padding: "12px 16px",
@@ -521,6 +522,7 @@ export default function ChatPage() {
                   color: "var(--text-primary)",
                   fontSize: "13px",
                   outline: "none",
+                  transition: "all 0.2s ease",
                 }}
               />
               <button
@@ -562,13 +564,17 @@ export default function ChatPage() {
               No Active Conversation
             </h3>
             <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", maxWidth: "320px" }}>
-              Left side se doctor select karein aur message bhej kar consultation shuru karein.
+              Select a doctor from the sidebar and send a message to start your consultation.
             </p>
           </div>
         )}
       </div>
 
       <style jsx>{`
+        .chat-input:focus {
+          border-color: var(--purple-primary) !important;
+          box-shadow: 0 0 0 2px var(--purple-glow);
+        }
         @media (max-width: 768px) {
           .chat-container-layout {
             flex-direction: column !important;

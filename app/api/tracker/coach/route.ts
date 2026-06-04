@@ -8,7 +8,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Unauthorized access" }, { status: 401 });
     }
     const body = await request.json();
-    const { healthData, messages } = body;
+    const { healthData, messages, languagePreference } = body;
 
     if (!messages || !Array.isArray(messages)) {
       return Response.json({ error: "messages array is required" }, { status: 400 });
@@ -30,7 +30,7 @@ export async function POST(request: NextRequest) {
     }));
 
     const healthDataJson = healthData ? JSON.stringify(healthData) : "{}";
-    const rawResponse = await runHealthCoach(healthDataJson, formattedHistory);
+    const rawResponse = await runHealthCoach(healthDataJson, formattedHistory, languagePreference || "hinglish");
 
     // Clean JSON response (strip markdown fences if any)
     const cleanedText = rawResponse
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Health Coach API Error:", error);
     return Response.json({
-      reply: "Main thoda asamarth hoon abhi response generate karne mein. Dobara try karein.",
+      reply: "I am unable to generate a response at the moment. Please try again.",
       daily_score: null,
       alert: null,
       tip: null,

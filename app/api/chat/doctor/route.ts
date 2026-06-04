@@ -23,7 +23,7 @@ export async function POST(request: NextRequest) {
 
     if (!process.env.GOOGLE_GEMINI_API_KEY) {
       return Response.json({
-        reply: "Aapka doctor abhi thoda busy hai. Emergency me please clinic/hospital visit karein."
+        reply: "Your doctor is currently busy. For emergencies, please visit the nearest clinic or hospital immediately."
       });
     }
 
@@ -43,6 +43,14 @@ Allergies: ${patientProfile.allergies?.join(", ") || "None"}
 Goals: ${patientProfile.health_goals?.join(", ") || "None"}`;
     }
 
+    const lang = patientProfile?.language_preference || "hinglish";
+    let langInstruction = `Respond in Hinglish (natural mix of Hindi and English) as is common in Indian clinical settings (e.g., "Aapko regular medicines skip nahi karni chahiye", "Aap rest karein aur warm water pijiye").`;
+    if (lang === "english") {
+      langInstruction = `Respond strictly in professional and friendly English. Do not use Hindi/Hinglish terms.`;
+    } else if (lang === "hindi") {
+      langInstruction = `Respond in clear, natural Hindi (Devanagari script) (e.g., "आपको नियमित दवाएं नहीं छोड़नी चाहिए", "आप आराम करें और गुनगुना पानी पिएं").`;
+    }
+
     const systemPrompt = `You are ${doctorName}, a clinical expert specializing as a ${specialization}. You hold the degree ${degree} with ${exp} years of clinical experience.
 You are conducting a private telemedicine chat consultation with a patient.
 
@@ -51,7 +59,7 @@ ${patientContextStr}
 
 ## Guidelines:
 1. Speak like a professional, compassionate medical practitioner.
-2. Respond in Hinglish (natural mix of Hindi and English) as is common in Indian clinical settings (e.g., "Aapko regular medicines skip nahi karni chahiye", "Aap rest karein aur warm water pijiye").
+2. ${langInstruction}
 3. Give scientifically accurate, clinical recommendations. Highlight safety, precautions, or red-flag warning signs (e.g. high fever, shortness of breath, acute pain) when the patient should go to a clinic immediately.
 4. Keep the response concise, engaging, and empathetic. Do not use blocky text or markdown formatting. Keep it to 3-5 sentences maximum.
 5. Provide a direct, natural chat response (No JSON, just plain text).`;
@@ -81,7 +89,7 @@ ${patientContextStr}
   } catch (error) {
     console.error("AI Doctor Consultation Chat Error:", error);
     return Response.json({
-      reply: "Main thoda busy hoon abhi response generate karne mein. Please simple terms mein batayein ya clinic visit karein."
+      reply: "I am currently unable to generate a response. Please describe your symptoms in simple terms or visit a clinic."
     });
   }
 }

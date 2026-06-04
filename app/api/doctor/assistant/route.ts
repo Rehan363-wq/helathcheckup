@@ -51,7 +51,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Doctor Assistant API Error:", error);
     return Response.json({
-      patient_brief: "AI analysis mein error aaya. Dobara try karein.",
+      patient_brief: "An error occurred during AI analysis. Please try again.",
       key_risk_factors: [],
       suggested_questions: [],
       medication_alerts: [],

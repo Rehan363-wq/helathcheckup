@@ -113,7 +113,10 @@ export default function DoctorProfilePage() {
       // Check if matches mock list
       const matchedLocal = localDocs.find((d) => d.id === docId);
       if (matchedLocal) {
-        setDoctor(matchedLocal);
+        setDoctor({
+          ...matchedLocal,
+          name: matchedLocal.name || (matchedLocal as any).full_name || "Doctor",
+        });
         setLoading(false);
         return;
       }

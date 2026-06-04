@@ -7,6 +7,7 @@ import LoadingSkeleton from "@/components/loading-skeleton";
 import { ScanResult } from "@/types/scan";
 import { fileToBase64 } from "@/lib/utils";
 import { AlertTriangle, Lightbulb, RotateCcw } from "lucide-react";
+import { loadPatientProfile } from "@/lib/user-profile";
 
 export default function ScanPage() {
   const [isLoading, setIsLoading] = useState(false);
@@ -39,6 +40,9 @@ export default function ScanPage() {
       }
     } catch (e) {}
 
+    const profile = loadPatientProfile();
+    const lang = profile?.language_preference || "hinglish";
+
     try {
       const base64 = await fileToBase64(file);
 
@@ -52,6 +56,7 @@ export default function ScanPage() {
           imageBase64: base64,
           mimeType: file.type,
           patientId,
+          languagePreference: lang,
         }),
       });
 
@@ -212,6 +217,9 @@ export default function ScanPage() {
                           }
                         } catch (e) {}
 
+                        const profile = loadPatientProfile();
+                        const lang = profile?.language_preference || "hinglish";
+
                         reader.onloadend = async () => {
                           const base64 = (reader.result as string).split(",")[1];
                           try {
@@ -225,6 +233,7 @@ export default function ScanPage() {
                                 imageBase64: base64,
                                 mimeType: file.type,
                                 patientId,
+                                languagePreference: lang,
                               }),
                             });
 

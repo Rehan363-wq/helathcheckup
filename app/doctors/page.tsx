@@ -37,7 +37,11 @@ function DoctorsListContent() {
       try {
         const stored = localStorage.getItem("healflow-doctors-list");
         if (stored) {
-          localDocs = JSON.parse(stored);
+          const parsed = JSON.parse(stored);
+          localDocs = parsed.map((ld: any) => ({
+            ...ld,
+            name: ld.name || ld.full_name || "Doctor",
+          }));
         } else {
           localDocs = MOCK_DOCTORS.map(d => ({ ...d, is_approved: true }));
           localStorage.setItem("healflow-doctors-list", JSON.stringify(localDocs));
@@ -123,11 +127,18 @@ function DoctorsListContent() {
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
-        (doc) =>
-          doc.name.toLowerCase().includes(q) ||
-          doc.specialization.toLowerCase().includes(q) ||
-          doc.area.toLowerCase().includes(q) ||
-          doc.city.toLowerCase().includes(q)
+        (doc) => {
+          const nameStr = (doc.name || (doc as any).full_name || "Doctor").toLowerCase();
+          const specStr = (doc.specialization || "").toLowerCase();
+          const areaStr = (doc.area || "").toLowerCase();
+          const cityStr = (doc.city || "").toLowerCase();
+          return (
+            nameStr.includes(q) ||
+            specStr.includes(q) ||
+            areaStr.includes(q) ||
+            cityStr.includes(q)
+          );
+        }
       );
     }
     return list;

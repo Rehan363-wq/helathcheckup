@@ -215,7 +215,7 @@ export default function ProfilePage() {
       setTimeout(() => setSuccess(false), 3000);
     } catch (err: any) {
       console.error("Save profile error:", err);
-      setError(err.message || "Changes save nahi ho paye. Please connection verify karein.");
+      setError(err.message || "Failed to save changes. Please verify your connection and try again.");
     } finally {
       setLoading(false);
     }

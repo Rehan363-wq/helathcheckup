@@ -8,6 +8,7 @@ import { ReportAnalysis } from "@/types/report";
 import { fileToBase64 } from "@/lib/utils";
 import { AlertTriangle, RotateCcw, MapPin, ArrowRight, Share2 } from "lucide-react";
 import Link from "next/link";
+import { loadPatientProfile } from "@/lib/user-profile";
 const parseRange = (rangeStr: string) => {
   if (!rangeStr) return { minRange: 0, maxRange: 100 };
   const parts = rangeStr.split("-").map(p => parseFloat(p.trim()));
@@ -64,6 +65,9 @@ export default function ReportPage() {
       }
     } catch (e) {}
 
+    const profile = loadPatientProfile();
+    const lang = profile?.language_preference || "hinglish";
+
     try {
       const base64 = await fileToBase64(file);
       const isImage = file.type.startsWith("image/");
@@ -79,6 +83,7 @@ export default function ReportPage() {
           mimeType: file.type,
           isImage: isImage,
           patientId,
+          languagePreference: lang,
         }),
       });
 
@@ -134,7 +139,7 @@ export default function ReportPage() {
   };
 
   const urgencyConfig = {
-    normal: { bg: "#D1FAE5", color: "#065F46", label: "✅ Sab Normal", severity: "low" as const },
+    normal: { bg: "#D1FAE5", color: "#065F46", label: "✅ All Normal", severity: "low" as const },
     consult: { bg: "#FEF3C7", color: "#92400E", label: "⚠️ Consult Required", severity: "medium" as const },
     urgent: { bg: "#FEE2E2", color: "#991B1B", label: "🔴 Urgent Attention", severity: "high" as const },
   };
@@ -262,6 +267,9 @@ WBC Count: 11,500 /cumm (Normal Range: 4,000 - 11,000)
 Platelet Count: 250,000 /cumm (Normal Range: 150,000 - 450,000)
 RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
 
+                    const profile = loadPatientProfile();
+                    const lang = profile?.language_preference || "hinglish";
+
                     const response = await fetch("/api/analyze/report", {
                       method: "POST",
                       headers: { 
@@ -272,6 +280,7 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
                         reportText: demoText,
                         isImage: false,
                         patientId,
+                        languagePreference: lang,
                       }),
                     });
 

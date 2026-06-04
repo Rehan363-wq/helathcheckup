@@ -93,7 +93,7 @@ export default function DoctorDashboardPage() {
 
     const useFallbackPatients = () => {
       setPatients([
-        { id: "p1", full_name: "Rohan Verma", email: "rohan@gmail.com", lastMessage: "Skin pe dry patches ho rahe hain", time: "10:15 AM" },
+        { id: "p1", full_name: "Rohan Verma", email: "rohan@gmail.com", lastMessage: "Experiencing dry patches on skin", time: "10:15 AM" },
         { id: "p2", full_name: "Simran Kaur", email: "simran@gmail.com", lastMessage: "Fever checking routine", time: "Yesterday" },
         { id: "p3", full_name: "Rahul Sharma", email: "rahul@gmail.com", lastMessage: "Hemoglobin 9.8 range advice", time: "2 days ago" },
       ]);
@@ -234,6 +234,7 @@ export default function DoctorDashboardPage() {
 
   return (
     <div
+      className="doctor-dashboard-container"
       style={{
         minHeight: "calc(100vh - 64px)",
         background: "var(--bg-surface)",
@@ -245,6 +246,7 @@ export default function DoctorDashboardPage() {
         {/* Profile Card & Info */}
         {currentDoctor && (
           <div
+            className={`doctor-profile-card ${selectedPatient ? "mobile-hidden" : ""}`}
             style={{
               background: "var(--bg-card)",
               border: "1px solid var(--border)",
@@ -289,9 +291,9 @@ export default function DoctorDashboardPage() {
             {/* Quick stats */}
             <div style={{ display: "flex", gap: "24px", flexWrap: "wrap" }}>
               {[
-                { icon: Heart, label: "Patients", val: patients.length, color: "#EC4899" },
-                { icon: CreditCard, label: "Consult Fees", val: `₹${currentDoctor.fees || 300}`, color: "#10b981" },
-                { icon: Star, label: "Rating", val: "4.8", color: "#F59E0B" },
+                { icon: Heart, label: "Patients", val: patients.length, color: "var(--accent-pink)" },
+                { icon: CreditCard, label: "Consult Fees", val: `₹${currentDoctor.fees || 300}`, color: "var(--severity-low)" },
+                { icon: Star, label: "Rating", val: "4.8", color: "var(--accent-yellow)" },
               ].map((stat) => (
                 <div key={stat.label} style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                   <stat.icon size={18} style={{ color: stat.color }} />
@@ -488,7 +490,7 @@ export default function DoctorDashboardPage() {
                     style={{
                       marginLeft: "auto", display: "flex", alignItems: "center", gap: "6px",
                       padding: "8px 16px", borderRadius: "10px", border: "none",
-                      background: "rgba(139,92,246,0.08)", color: "#8B5CF6",
+                      background: "var(--purple-glow)", color: "var(--purple-primary)",
                       fontSize: "12px", fontWeight: 700, cursor: aiLoading ? "not-allowed" : "pointer",
                       fontFamily: "var(--font-body)", transition: "all 0.2s",
                     }}
@@ -505,19 +507,19 @@ export default function DoctorDashboardPage() {
                     display: "flex", flexDirection: "column", gap: "10px",
                   }}>
                     <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                      <span style={{ fontSize: "12px", fontWeight: 700, color: "#8B5CF6", textTransform: "uppercase", letterSpacing: "0.05em" }}>🤖 AI Patient Brief</span>
+                      <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--purple-primary)", textTransform: "uppercase", letterSpacing: "0.05em" }}>🤖 AI Patient Brief</span>
                       <button onClick={() => setAiSummary(null)} style={{ background: "none", border: "none", color: "var(--text-muted)", cursor: "pointer", fontSize: "12px" }}>✕</button>
                     </div>
                     <p style={{ margin: 0, fontSize: "13px", color: "var(--text-primary)", lineHeight: 1.6 }}>{aiSummary.patient_brief}</p>
                     {aiSummary.key_risk_factors?.length > 0 && (
                       <div>
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#EF4444" }}>⚠️ Risk Factors:</span>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--severity-high)" }}>⚠️ Risk Factors:</span>
                         <span style={{ fontSize: "12px", color: "var(--text-secondary)", marginLeft: "4px" }}>{aiSummary.key_risk_factors.join(", ")}</span>
                       </div>
                     )}
                     {aiSummary.suggested_questions?.length > 0 && (
                       <div>
-                        <span style={{ fontSize: "11px", fontWeight: 700, color: "#3B82F6" }}>❓ Suggested Questions:</span>
+                        <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--accent-blue)" }}>❓ Suggested Questions:</span>
                         <ul style={{ margin: "4px 0 0", paddingLeft: "16px" }}>
                           {aiSummary.suggested_questions.slice(0, 3).map((q: string, i: number) => (
                             <li key={i} style={{ fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.5 }}>{q}</li>
@@ -526,7 +528,7 @@ export default function DoctorDashboardPage() {
                       </div>
                     )}
                     {aiSummary.consultation_tip && (
-                      <p style={{ margin: 0, fontSize: "12px", color: "#10B981", fontWeight: 600 }}>💡 {aiSummary.consultation_tip}</p>
+                      <p style={{ margin: 0, fontSize: "12px", color: "var(--severity-low)", fontWeight: 600 }}>💡 {aiSummary.consultation_tip}</p>
                     )}
                   </div>
                 )}
@@ -590,6 +592,7 @@ export default function DoctorDashboardPage() {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     placeholder={`Reply to ${selectedPatient.full_name}...`}
+                    className="chat-input"
                     style={{
                       flex: 1,
                       padding: "12px 16px",
@@ -599,6 +602,7 @@ export default function DoctorDashboardPage() {
                       color: "var(--text-primary)",
                       fontSize: "13px",
                       outline: "none",
+                      transition: "all 0.2s ease",
                     }}
                   />
                   <button
@@ -640,7 +644,7 @@ export default function DoctorDashboardPage() {
                   No Patient Selected
                 </h3>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", maxWidth: "320px" }}>
-                  Consultation shuru karne ke liye queue mein se patient select karein.
+                  Select a patient from the queue to start the consultation.
                 </p>
               </div>
             )}
@@ -649,8 +653,16 @@ export default function DoctorDashboardPage() {
       </div>
 
       <style jsx>{`
+        .chat-input:focus {
+          border-color: var(--purple-primary) !important;
+          box-shadow: 0 0 0 2px var(--purple-glow);
+        }
         @media (max-width: 768px) {
+          .doctor-dashboard-container {
+            padding: 12px 12px !important;
+          }
           .chat-container-layout {
+            display: flex !important;
             flex-direction: column !important;
           }
           .left-sidebar {

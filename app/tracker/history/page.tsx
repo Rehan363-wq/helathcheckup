@@ -175,7 +175,7 @@ export default function HistoryPage() {
         {activeDays.length === 0 && (
           <div style={{ textAlign: "center", padding: "40px 0" }}>
             <Calendar size={32} style={{ color: "var(--text-muted)", marginBottom: "8px" }} />
-            <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: 0 }}>Koi data nahi hai abhi. Log tab se data add karo!</p>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: 0 }}>No health logs recorded yet. Add logs to see your progress!</p>
           </div>
         )}
       </div>

@@ -18,7 +18,7 @@ export default function HealthBotPage() {
     {
       id: "initial",
       role: "assistant",
-      content: "Hello! Main HealFlow AI Health Bot hoon. Aapko kya health issue hai, ya kis medicine ke baare mein jaanna hai? Mujhe simple Hindi/English mein batayein.",
+      content: "Hello! I am HealFlow AI Health Bot. What health concerns do you have, or which medication details would you like to check? Feel free to describe them.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -26,10 +26,10 @@ export default function HealthBotPage() {
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const starterPrompts = [
-    "Skin par ring-shaped red rashes ban rahe hain aur itching ho rahi hai",
-    "Mujhe kal raat se halka fever hai aur sar dard ho raha hai",
-    "Paracetamol lene ke kya rules aur precautions hote hain?",
-    "CBC report mein low hemoglobin ka kya matlab hai?",
+    "I have itchy, red ring-shaped rashes on my skin",
+    "I have a mild fever and headache since last night",
+    "What are the precautions and guidelines for taking Paracetamol?",
+    "What does a low hemoglobin count in a CBC report mean?",
   ];
 
   useEffect(() => {
@@ -92,7 +92,7 @@ export default function HealthBotPage() {
         {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "Sorry, main abhi reply nahi kar pa raha hoon. Server issue ho sakta hai. Dobara try karein.",
+          content: "Sorry, I cannot reply right now. There might be a server issue. Please try again.",
         },
       ]);
     } finally {
@@ -437,6 +437,7 @@ export default function HealthBotPage() {
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
             placeholder="Type your message here..."
+            className="chat-input"
             style={{
               flex: 1,
               padding: "12px 18px",
@@ -447,6 +448,7 @@ export default function HealthBotPage() {
               fontFamily: "var(--font-body)",
               fontSize: "13px",
               outline: "none",
+              transition: "all 0.2s ease",
             }}
           />
           <button
@@ -474,6 +476,10 @@ export default function HealthBotPage() {
       </div>
 
       <style jsx>{`
+        .chat-input:focus {
+          border-color: var(--purple-primary) !important;
+          box-shadow: 0 0 0 2px var(--purple-glow);
+        }
         @media (max-width: 768px) {
           .starter-prompts-grid {
             grid-template-columns: 1fr !important;

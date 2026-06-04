@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("AI Health Chat Error:", error);
     return Response.json({
-      reply: "Main thoda asamarth hoon abhi response generate karne mein. Please simple terms mein batayein.",
+      reply: "I am unable to generate a response at the moment. Please describe your concern in simple terms.",
       recommendedSpecialization: null,
       suggestedMedicine: null
     });

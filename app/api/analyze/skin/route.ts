@@ -9,7 +9,7 @@ export async function POST(request: NextRequest) {
       return Response.json({ error: "Unauthorized access" }, { status: 401 });
     }
     const body = await request.json();
-    const { imageBase64, mimeType, patientId } = body;
+    const { imageBase64, mimeType, patientId, languagePreference } = body;
 
     if (!imageBase64 || !mimeType) {
       return Response.json(
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const resultText = await analyzeSkinImage(imageBase64, mimeType);
+    const resultText = await analyzeSkinImage(imageBase64, mimeType, languagePreference || "hinglish");
 
     // Clean and parse the JSON response from Gemini
     const cleanedText = resultText
