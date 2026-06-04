@@ -92,20 +92,76 @@ export default function DoctorDashboardPage() {
     };
 
     const useFallbackPatients = () => {
-      setPatients([
+      const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+      try {
+        const stored = localStorage.getItem(registryKey);
+        if (stored) {
+          const list = JSON.parse(stored);
+          if (list && list.length > 0) {
+            setPatients(list);
+            setDbStatus("Sandbox Mode: Active Patient Queues");
+            return;
+          }
+        }
+      } catch (e) {
+        console.warn("Failed to parse sandbox patients registry:", e);
+      }
+
+      const defaults = [
         { id: "p1", full_name: "Rohan Verma", email: "rohan@gmail.com", lastMessage: "Experiencing dry patches on skin", time: "10:15 AM" },
         { id: "p2", full_name: "Simran Kaur", email: "simran@gmail.com", lastMessage: "Fever checking routine", time: "Yesterday" },
         { id: "p3", full_name: "Rahul Sharma", email: "rahul@gmail.com", lastMessage: "Hemoglobin 9.8 range advice", time: "2 days ago" },
-      ]);
+      ];
+      setPatients(defaults);
+      try {
+        localStorage.setItem(registryKey, JSON.stringify(defaults));
+      } catch (e) {}
       setDbStatus("Sandbox Mode: Active Patient Queues");
     };
 
     loadPatients();
+
+    // Storage listener to update active patient queue dynamically
+    const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === registryKey) {
+        try {
+          if (e.newValue) {
+            setPatients(JSON.parse(e.newValue));
+          }
+        } catch {}
+      }
+    };
+    window.addEventListener("storage", handleStorageChange);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, [currentDoctor, supabase]);
 
   // Load messages when selected patient changes
   useEffect(() => {
     if (!selectedPatient || !currentDoctor) return;
+
+    let activeChannel: any = null;
+    const mockKey = `healflow-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
+
+    const loadMockHistory = () => {
+      // Patients chat key maps to the patient's local history (shared with patient)
+      const saved = localStorage.getItem(mockKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        const initialMsg: ChatMessage = {
+          id: "init",
+          sender_id: selectedPatient.id,
+          content: selectedPatient.lastMessage || "Hello doctor, can you consult me?",
+          created_at: new Date().toISOString(),
+        };
+        setMessages([initialMsg]);
+        localStorage.setItem(mockKey, JSON.stringify([initialMsg]));
+      }
+    };
 
     const loadMessages = async () => {
       if (!supabase || currentDoctor.isSandbox) {
@@ -133,7 +189,7 @@ export default function DoctorDashboardPage() {
           setMessages(msgData || []);
 
           // Subscribe to Realtime messages
-          const channel = supabase
+          activeChannel = supabase
             .channel(`room-${chatData.id}`)
             .on(
               "postgres_changes",
@@ -143,10 +199,6 @@ export default function DoctorDashboardPage() {
               }
             )
             .subscribe();
-
-          return () => {
-            supabase.removeChannel(channel);
-          };
         } else {
           loadMockHistory();
         }
@@ -156,25 +208,24 @@ export default function DoctorDashboardPage() {
       }
     };
 
-    const loadMockHistory = () => {
-      // Patients chat key maps to the patient's local history (shared with patient)
-      const mockKey = `healflow-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
-      const saved = localStorage.getItem(mockKey);
-      if (saved) {
-        setMessages(JSON.parse(saved));
-      } else {
-        const initialMsg: ChatMessage = {
-          id: "init",
-          sender_id: selectedPatient.id,
-          content: selectedPatient.lastMessage || "Hello doctor, can you consult me?",
-          created_at: new Date().toISOString(),
-        };
-        setMessages([initialMsg]);
-        localStorage.setItem(mockKey, JSON.stringify([initialMsg]));
+    loadMessages();
+
+    // Storage listener to update chat stream in real time
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === mockKey) {
+        try {
+          setMessages(e.newValue ? JSON.parse(e.newValue) : []);
+        } catch {}
       }
     };
+    window.addEventListener("storage", handleStorageChange);
 
-    loadMessages();
+    return () => {
+      if (activeChannel && supabase) {
+        supabase.removeChannel(activeChannel);
+      }
+      window.removeEventListener("storage", handleStorageChange);
+    };
   }, [selectedPatient, currentDoctor, supabase]);
 
   useEffect(() => {
@@ -226,9 +277,37 @@ export default function DoctorDashboardPage() {
     const localHistory = [...messages, newReply];
     localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
+    // Update patient registry for sandbox mode
+    if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
+      try {
+        const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+        const stored = localStorage.getItem(registryKey);
+        let registry = [];
+        if (stored) {
+          registry = JSON.parse(stored);
+        }
+        const existingIdx = registry.findIndex((p: any) => p.email === selectedPatient.email);
+        const entry = {
+          id: selectedPatient.id,
+          full_name: selectedPatient.full_name,
+          email: selectedPatient.email,
+          lastMessage: replyContent,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        if (existingIdx >= 0) {
+          registry[existingIdx] = entry;
+        } else {
+          registry.push(entry);
+        }
+        localStorage.setItem(registryKey, JSON.stringify(registry));
+      } catch (e) {
+        console.warn("Failed to update sandbox patient registry on reply:", e);
+      }
+    }
+
     // Update patient card last message preview
     setPatients((prev) =>
-      prev.map((p) => (p.id === selectedPatient.id ? { ...p, lastMessage: replyContent, time: "Just now" } : p))
+      prev.map((p) => (p.id === selectedPatient.id ? { ...p, lastMessage: replyContent, time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) } : p))
     );
   };
 

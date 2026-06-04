@@ -109,6 +109,25 @@ export default function ChatPage() {
   useEffect(() => {
     if (!selectedDoctor || !currentUser) return;
     
+    let activeChannel: any = null;
+    const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
+
+    const loadMockHistory = () => {
+      const saved = localStorage.getItem(mockKey);
+      if (saved) {
+        setMessages(JSON.parse(saved));
+      } else {
+        const greetMsg: ChatMessage = {
+          id: "greet",
+          sender_id: selectedDoctor.id,
+          content: `Hello! I am ${selectedDoctor.full_name} (${selectedDoctor.specialization}). Please share your health symptoms in detail so that I can assist you.`,
+          created_at: new Date().toISOString(),
+        };
+        setMessages([greetMsg]);
+        localStorage.setItem(mockKey, JSON.stringify([greetMsg]));
+      }
+    };
+
     const loadMessages = async () => {
       if (!supabase || currentUser.isSandbox) {
         loadMockHistory();
@@ -150,7 +169,7 @@ export default function ChatPage() {
         setMessages(msgData || []);
 
         // Subscribe to Realtime messages
-        const channel = supabase
+        activeChannel = supabase
           .channel(`room-${chatId}`)
           .on(
             "postgres_changes",
@@ -160,35 +179,31 @@ export default function ChatPage() {
             }
           )
           .subscribe();
-
-        return () => {
-          supabase.removeChannel(channel);
-        };
       } catch (err) {
         console.warn("Realtime fetch failed, fallback to mock conversation history:", err);
         loadMockHistory();
       }
     };
 
-    const loadMockHistory = () => {
-      const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
-      const saved = localStorage.getItem(mockKey);
-      if (saved) {
-        setMessages(JSON.parse(saved));
-      } else {
-        const greetMsg: ChatMessage = {
-          id: "greet",
-          sender_id: selectedDoctor.id,
-          content: `Hello! I am ${selectedDoctor.full_name} (${selectedDoctor.specialization}). Please share your health symptoms in detail so that I can assist you.`,
-          created_at: new Date().toISOString(),
-        };
-        setMessages([greetMsg]);
-        localStorage.setItem(mockKey, JSON.stringify([greetMsg]));
+    loadMessages();
+
+    // Storage listener for sandbox mode
+    const handleStorageChange = (e: StorageEvent) => {
+      if (e.key === mockKey) {
+        try {
+          setMessages(e.newValue ? JSON.parse(e.newValue) : []);
+        } catch {}
       }
     };
+    window.addEventListener("storage", handleStorageChange);
 
-    loadMessages();
-  }, [selectedDoctor, currentUser]);
+    return () => {
+      if (activeChannel && supabase) {
+        supabase.removeChannel(activeChannel);
+      }
+      window.removeEventListener("storage", handleStorageChange);
+    };
+  }, [selectedDoctor, currentUser, supabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -239,58 +254,27 @@ export default function ChatPage() {
     const localHistory = [...messages, newMsg];
     localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
-    // Simulate doctor replies in Sandbox Mode
+    // Update patient registry for sandbox doctor dashboard queue
     if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
-      setLoading(true);
       try {
-        const { loadPatientProfile } = await import("@/lib/user-profile");
-        const patientProfile = loadPatientProfile();
-
-        const token = currentUser?.email || "sandbox";
-
-        const response = await fetch("/api/chat/doctor", {
-          method: "POST",
-          headers: { 
-            "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`
-          },
-          body: JSON.stringify({
-            messages: [...messages, newMsg],
-            doctorProfile: selectedDoctor,
-            patientProfile: patientProfile,
-          }),
-        });
-
-        const data = await response.json();
-        const doctorReply = data.reply || "Yes, I understand your concern. Please share the details so I can guide you further.";
-
-        const replyMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          sender_id: selectedDoctor.id,
-          content: doctorReply,
-          created_at: new Date().toISOString(),
+        const registryKey = `healflow-sandbox-patients-${selectedDoctor.id}`;
+        const registry = JSON.parse(localStorage.getItem(registryKey) || "[]");
+        const existingIdx = registry.findIndex((p: any) => p.email === currentUser.email);
+        const entry = {
+          id: currentUser.id || "patient-demo-id",
+          full_name: currentUser.name || "Demo Patient",
+          email: currentUser.email,
+          lastMessage: userMsgContent,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
-
-        setMessages((prev) => {
-          const updated = [...prev, replyMsg];
-          localStorage.setItem(mockKey, JSON.stringify(updated));
-          return updated;
-        });
-      } catch (err) {
-        console.error("AI Doctor chat sandbox error:", err);
-        const replyMsg: ChatMessage = {
-          id: (Date.now() + 1).toString(),
-          sender_id: selectedDoctor.id,
-          content: "I understand your symptoms. Please follow standard self-care guidelines and let me know if you experience any worsening signs.",
-          created_at: new Date().toISOString(),
-        };
-        setMessages((prev) => {
-          const updated = [...prev, replyMsg];
-          localStorage.setItem(mockKey, JSON.stringify(updated));
-          return updated;
-        });
-      } finally {
-        setLoading(false);
+        if (existingIdx >= 0) {
+          registry[existingIdx] = entry;
+        } else {
+          registry.push(entry);
+        }
+        localStorage.setItem(registryKey, JSON.stringify(registry));
+      } catch (e) {
+        console.warn("Failed to update sandbox patient registry:", e);
       }
     }
   };
