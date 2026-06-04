@@ -38,14 +38,15 @@ CREATE POLICY "Allow users to update own profile"
 CREATE OR REPLACE FUNCTION public.handle_new_user()
 RETURNS trigger AS $$
 BEGIN
-  INSERT INTO public.profiles (id, full_name, role, specialization, degree, fees)
+  INSERT INTO public.profiles (id, full_name, role, specialization, degree, fees, is_approved)
   VALUES (
     new.id,
     COALESCE(new.raw_user_meta_data->>'full_name', new.email),
     COALESCE(new.raw_user_meta_data->>'role', 'patient'),
     new.raw_user_meta_data->>'specialization',
     new.raw_user_meta_data->>'degree',
-    COALESCE((new.raw_user_meta_data->>'fees')::integer, 0)
+    COALESCE((new.raw_user_meta_data->>'fees')::integer, 0),
+    CASE WHEN COALESCE(new.raw_user_meta_data->>'role', 'patient') = 'doctor' THEN false ELSE true END
   );
   RETURN new;
 END;
@@ -288,6 +289,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS allergies TEXT[];
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS health_goals TEXT[];
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language_preference TEXT DEFAULT 'hinglish';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
 -- Doctor-specific extensions
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS experience_years INTEGER;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS preferred_conditions TEXT[];

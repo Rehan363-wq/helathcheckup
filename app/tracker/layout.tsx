@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { LayoutDashboard, ClipboardList, MessageCircle, History } from "lucide-react";
+import { LayoutDashboard, ClipboardList, MessageCircle, History, Music } from "lucide-react";
 
 const TABS = [
   { href: "/tracker", label: "Dashboard", icon: LayoutDashboard },
   { href: "/tracker/log", label: "Log", icon: ClipboardList },
+  { href: "/tracker/music", label: "Mind Relaxer", icon: Music },
   { href: "/tracker/chat", label: "AI Coach", icon: MessageCircle },
   { href: "/tracker/history", label: "History", icon: History },
 ];
@@ -58,8 +59,8 @@ export default function TrackerLayout({ children }: { children: React.ReactNode 
                   fontWeight: isActive ? 700 : 500,
                   fontSize: "14px",
                   color: isActive ? "white" : "var(--text-secondary)",
-                  background: isActive ? "#3B82F6" : "transparent",
-                  boxShadow: isActive ? "0 4px 12px rgba(59,130,246,0.2)" : "none",
+                  background: isActive ? "var(--purple-primary)" : "transparent",
+                  boxShadow: isActive ? "var(--shadow-purple)" : "none",
                   transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
                 }}
               >

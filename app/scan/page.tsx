@@ -112,7 +112,7 @@ export default function ScanPage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Photo upload karo — AI batayega kya condition hai
+              Upload skin or wound photos for instant AI dermatology insights
             </p>
           </div>
 
@@ -137,7 +137,7 @@ export default function ScanPage() {
               }}
             >
               <RotateCcw size={16} />
-              Naya Scan
+              New Scan
             </button>
           )}
         </div>
@@ -164,7 +164,7 @@ export default function ScanPage() {
                   ]}
                   maxSizeMB={10}
                   label="Upload skin/wound photo"
-                  sublabel="Drag & drop karo ya click karo"
+                  sublabel="Drag & drop your file or click to browse"
                   icon="image"
                 />
                 

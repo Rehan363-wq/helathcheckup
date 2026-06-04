@@ -1,20 +1,13 @@
 import type { Metadata } from "next";
-import { Outfit, Plus_Jakarta_Sans, Playfair_Display } from "next/font/google";
+import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { ThemeProvider } from "@/lib/theme-context";
 
-const outfit = Outfit({
-  subsets: ["latin"],
-  weight: ["500", "600", "700", "800"],
-  variable: "--font-heading",
-  display: "swap",
-});
-
-const plusJakartaSans = Plus_Jakarta_Sans({
+const inter = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-body",
+  variable: "--font-sans",
   display: "swap",
 });
 
@@ -27,16 +20,15 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "HealFlow AI — Apna Doctor, Apni Zeb Mein",
+  title: "Vitalis Health Systems — Care as it should be",
   description:
-    "AI-powered healthcare: Scan skin conditions, understand medical reports, and find verified doctors near you. HealFlow AI se samjho, doctor se milo.",
+    "A premium, Apple-inspired healthcare web application designed to provide a serene, frictionless experience for patients and providers.",
   keywords: [
-    "HealFlow",
-    "AI healthcare",
-    "skin analyzer",
-    "medical report",
-    "doctor finder",
-    "India healthcare",
+    "Vitalis",
+    "Vitalis Health",
+    "Serenity Health",
+    "Apple healthcare",
+    "premium medical platform",
   ],
 };
 
@@ -46,9 +38,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${outfit.variable} ${plusJakartaSans.variable} ${playfairDisplay.variable}`}>
+    <html lang="en" className={`${inter.variable} ${playfairDisplay.variable}`}>
       <body
-        className={plusJakartaSans.className}
+        className={inter.className}
         style={{
           minHeight: "100vh",
           display: "flex",

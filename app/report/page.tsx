@@ -129,7 +129,7 @@ export default function ReportPage() {
                 color: "var(--text-secondary)",
               }}
             >
-              Medical report upload karo — AI simple mein explain karega
+              Upload laboratory reports or blood tests for AI clinical translations
             </p>
           </div>
           {(result || error) && (
@@ -152,7 +152,7 @@ export default function ReportPage() {
               }}
             >
               <RotateCcw size={16} />
-              Naya Report
+              New Report
             </button>
           )}
         </div>
@@ -170,7 +170,7 @@ export default function ReportPage() {
               ]}
               maxSizeMB={10}
               label="Upload medical report"
-              sublabel="PDF ya photo upload karo"
+              sublabel="PDF or image files"
               icon="document"
             />
             
@@ -524,7 +524,7 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
                 }}
               >
                 <MapPin size={16} />
-                Doctor Dhundho
+                Find Specialists
                 <ArrowRight size={14} />
               </Link>
             </div>

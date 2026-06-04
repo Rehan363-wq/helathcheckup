@@ -1,62 +1,62 @@
 @import "tailwindcss";
 
-/* ===== CSS Custom Properties (Design Tokens) ===== */
+/* ===== Serenity Health Systems Design Tokens ===== */
 :root {
-  /* Default: Dark Mode */
-  --bg-dark: #0D0A1E;
-  --bg-surface: #0D0A1E;
-  --bg-card: #16122C;
-  --bg-card-dark: #110D24;
+  /* Default: Premium Peaceful White */
+  --bg-dark: #F9F9FB;
+  --bg-surface: #F9F9FB;
+  --bg-card: #FFFFFF;
+  --bg-card-dark: #F4F4F6;
 
-  /* Brand Colors */
-  --purple-primary: #7C3AED;
-  --purple-light: #A78BFA;
-  --purple-glow: rgba(139, 92, 246, 0.125);
+  /* Vitalis Blue Accent */
+  --purple-primary: #0071E3;
+  --purple-light: #3897FD;
+  --purple-glow: rgba(0, 113, 227, 0.06);
 
-  /* Accent Colors */
-  --accent-yellow: #F59E0B;
-  --accent-pink: #EC4899;
-  --accent-blue: #3B82F6;
-  --accent-gold: #F5D567;
+  /* Accents */
+  --accent-yellow: #FF9500;
+  --accent-pink: #FF2D55;
+  --accent-blue: #0071E3;
+  --accent-gold: #FFD60A;
 
   /* Status Colors */
-  --severity-low: #10B981;
-  --severity-med: #F59E0B;
-  --severity-high: #EF4444;
+  --severity-low: #34C759;
+  --severity-med: #FF9500;
+  --severity-high: #FF3B30;
 
-  /* Text */
-  --text-primary: #FFFFFF;
-  --text-secondary: #9CA3AF;
+  /* Text Colors */
+  --text-primary: #1C1C1E;
+  --text-secondary: #6E6E73;
   --text-white: #FFFFFF;
-  --text-muted: #6B7280;
+  --text-muted: #AEAEB2;
 
   /* Borders & Shadows */
-  --border: rgba(255,255,255,0.08);
-  --shadow-card: 0 8px 32px rgba(0,0,0,0.3);
-  --shadow-dark: 0 8px 32px rgba(0,0,0,0.5);
-  --shadow-purple: 0 8px 32px rgba(124,58,237,0.15);
+  --border: #ECEAEF;
+  --shadow-card: 0 4px 18px rgba(0,0,0,0.03);
+  --shadow-dark: 0 6px 24px rgba(0,0,0,0.05);
+  --shadow-purple: 0 4px 18px rgba(0, 113, 227, 0.08);
 
-  /* Fallback Font Families (overridden by next/font/google dynamically) */
-  --font-heading: 'Outfit', sans-serif;
-  --font-body: 'Plus Jakarta Sans', sans-serif;
+  /* Fallback Font Families (overridden dynamically) */
+  --font-heading: var(--font-sans), 'Inter', sans-serif;
+  --font-body: var(--font-sans), 'Inter', sans-serif;
 }
 
-/* Light Mode Overrides */
-html.light {
-  --bg-dark: #ECEAF8;
-  --bg-surface: #F8F7FF;
-  --bg-card: #FFFFFF;
-  --bg-card-dark: #ECEAF8;
+/* Apple Sleek Dark Mode (Matte Black & Dark Gray) */
+html.dark {
+  --bg-dark: #000000;
+  --bg-surface: #1C1C1E;
+  --bg-card: #2C2C2E;
+  --bg-card-dark: #121214;
 
-  --text-primary: #111827;
-  --text-secondary: #4B5563;
-  --text-white: #111827;
-  --text-muted: #9CA3AF;
+  --text-primary: #FFFFFF;
+  --text-secondary: #8E8E93;
+  --text-white: #FFFFFF;
+  --text-muted: #636366;
 
-  --border: #E5E7EB;
-  --shadow-card: 0 4px 24px rgba(0,0,0,0.06);
-  --shadow-dark: 0 4px 24px rgba(0,0,0,0.08);
-  --shadow-purple: 0 4px 24px rgba(124,58,237,0.1);
+  --border: #3A3A3C;
+  --shadow-card: 0 8px 32px rgba(0,0,0,0.5);
+  --shadow-dark: 0 8px 32px rgba(0,0,0,0.7);
+  --shadow-purple: 0 8px 32px rgba(0, 113, 227, 0.25);
 }
 
 /* ===== Base Reset ===== */
@@ -74,13 +74,13 @@ body {
   font-family: var(--font-body);
   color: var(--text-primary);
   background: var(--bg-surface);
-  line-height: 1.6;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   text-rendering: optimizeLegibility;
 }
 
-/* Ensure form controls inherit the clean design system fonts */
+/* Ensure inputs inherit body fonts */
 button, input, select, textarea {
   font-family: inherit;
   font-size: inherit;
@@ -91,24 +91,22 @@ button, input, select, textarea {
 h1, h2, h3, h4, h5, h6 {
   font-family: var(--font-heading);
   font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
 }
 
 h1 {
-  font-size: 3rem;
-  letter-spacing: -0.025em;
+  font-size: 2.75rem;
   font-weight: 800;
 }
 
 h2 {
-  font-size: 2rem;
-  letter-spacing: -0.02em;
+  font-size: 1.85rem;
   font-weight: 700;
 }
 
 h3 {
-  font-size: 1.375rem;
+  font-size: 1.35rem;
   font-weight: 600;
 }
 
@@ -125,7 +123,7 @@ h3 {
 .text-caption {
   font-family: var(--font-body);
   font-size: 12px;
-  font-weight: 300;
+  font-weight: 400;
   color: var(--text-muted);
 }
 
@@ -133,14 +131,14 @@ h3 {
   font-family: var(--font-body);
   font-size: 13px;
   font-weight: 400;
-  line-height: 1.5;
+  line-height: 1.45;
 }
 
 /* ===== Animations ===== */
 @keyframes fadeInUp {
   from {
     opacity: 0;
-    transform: translateY(24px);
+    transform: translateY(16px);
   }
   to {
     opacity: 1;
@@ -156,7 +154,7 @@ h3 {
 @keyframes slideDown {
   from {
     opacity: 0;
-    transform: translateY(-16px);
+    transform: translateY(-12px);
   }
   to {
     opacity: 1;
@@ -170,51 +168,44 @@ h3 {
 }
 
 @keyframes popIn {
-  0% { transform: scale(0.8); opacity: 0; }
-  60% { transform: scale(1.05); }
+  0% { transform: scale(0.95); opacity: 0; }
   100% { transform: scale(1); opacity: 1; }
 }
 
 @keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 20px rgba(124,58,237,0.2); }
-  50% { box-shadow: 0 0 40px rgba(124,58,237,0.4); }
-}
-
-@keyframes dotFill {
-  from { transform: scale(0); }
-  to { transform: scale(1); }
+  0%, 100% { box-shadow: 0 0 15px rgba(0, 113, 227, 0.1); }
+  50% { box-shadow: 0 0 30px rgba(0, 113, 227, 0.2); }
 }
 
 @keyframes float {
   0%, 100% { transform: translateY(0px); }
-  50% { transform: translateY(-10px); }
+  50% { transform: translateY(-8px); }
 }
 
 .animate-fade-in-up {
-  animation: fadeInUp 0.6s ease-out forwards;
+  animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-fade-in {
-  animation: fadeIn 0.4s ease-out forwards;
+  animation: fadeIn 0.3s ease-out forwards;
 }
 
 .animate-slide-down {
-  animation: slideDown 0.3s ease-out forwards;
+  animation: slideDown 0.25s ease-out forwards;
 }
 
 .animate-pop-in {
-  animation: popIn 0.4s ease-out forwards;
+  animation: popIn 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
 }
 
 .animate-float {
-  animation: float 3s ease-in-out infinite;
+  animation: float 4s ease-in-out infinite;
 }
 
 .animation-delay-100 { animation-delay: 0.1s; }
 .animation-delay-200 { animation-delay: 0.2s; }
 .animation-delay-300 { animation-delay: 0.3s; }
 .animation-delay-400 { animation-delay: 0.4s; }
-.animation-delay-500 { animation-delay: 0.5s; }
 
 /* ===== Skeleton Shimmer ===== */
 .skeleton {
@@ -242,7 +233,7 @@ h3 {
   background: var(--purple-light);
 }
 
-/* ===== Premium Overrides & Smooth UX ===== */
+/* ===== Apple Style Visual Tweaks ===== */
 .serif-italic {
   font-family: var(--font-serif), Georgia, serif !important;
   font-style: italic !important;
@@ -250,17 +241,17 @@ h3 {
 }
 
 .smooth-transition {
-  transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1) !important;
-}
-
-.hover-premium {
   transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1) !important;
 }
 
+.hover-premium {
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1) !important;
+}
+
 .hover-premium:hover {
-  transform: translateY(-6px) !important;
+  transform: translateY(-4px) !important;
   box-shadow: var(--shadow-purple) !important;
-  border-color: rgba(124, 58, 237, 0.3) !important;
+  border-color: rgba(0, 113, 227, 0.15) !important;
 }
 
 .glow-point {
@@ -282,6 +273,23 @@ h3 {
 
 @keyframes pulse-glow-dot {
   0% { transform: scale(1); opacity: 0.6; }
-  100% { transform: scale(2.5); opacity: 0; }
+  100% { transform: scale(2.2); opacity: 0; }
 }
 
+/* Apply Round Eight (16px) globally to cards and containers */
+.round-eight {
+  border-radius: 16px !important;
+}
+
+/* Utility to override elements style and ensure Apple premium curves */
+.apple-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  box-shadow: var(--shadow-card);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.apple-card:hover {
+  box-shadow: var(--shadow-dark);
+}

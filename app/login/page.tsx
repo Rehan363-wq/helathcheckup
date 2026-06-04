@@ -67,6 +67,89 @@ export default function LoginPage() {
           fees: targetRole === "doctor" ? Number(targetFees) : undefined,
         };
         localStorage.setItem("healflow-session", JSON.stringify(mockUser));
+
+        if (isSigningUp && targetRole === "doctor") {
+          try {
+            const storedDocs = localStorage.getItem("healflow-doctors-list");
+            const docs = storedDocs ? JSON.parse(storedDocs) : [];
+            if (!docs.some((d: any) => d.email === targetEmail.trim())) {
+              docs.push({
+                id: "doc-" + Date.now(),
+                email: targetEmail.trim(),
+                name: targetName || "Dr. Demo Account",
+                specialization: targetSpec,
+                degree: targetDegree || "MBBS",
+                fees: Number(targetFees) || 300,
+                city: "Delhi",
+                area: "Connaught Place",
+                rating: 4.5,
+                distance: 1.5,
+                phone: "+91 99999 99999",
+                is_approved: false,
+              });
+              localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+            }
+          } catch (e) {
+            console.warn("Error adding local sandbox doctor:", e);
+          }
+        }
+
+        // Seed profile data for returning sandbox users to prevent name mismatch discrepancies
+        if (!isSigningUp) {
+          if (targetRole === "patient") {
+            const patientProfile = {
+              name: mockUser.name,
+              phone: "+91 98765 43210",
+              age: 28,
+              gender: "male" as const,
+              blood_group: "O+",
+              conditions: ["Hypertension (High BP)"],
+              medications: ["Amlodipine 5mg"],
+              allergies: ["Penicillin"],
+              uploaded_reports: [],
+              health_goals: ["Control Blood Pressure", "Improve Sleep"],
+              language_preference: "hinglish" as const,
+              onboarding_completed: true,
+            };
+            localStorage.setItem("healflow-patient-profile", JSON.stringify(patientProfile));
+            
+            const trackerProfile = {
+              name: mockUser.name,
+              age: 28,
+              gender: "male" as const,
+              weight_kg: 72,
+              height_cm: 175,
+              conditions: ["Hypertension (High BP)"],
+              medications: ["Amlodipine 5mg"],
+              daily_cal_goal: 2000,
+              step_goal: 8000,
+              sleep_goal_hrs: 8.0,
+            };
+            localStorage.setItem("healflow-health-profile", JSON.stringify(trackerProfile));
+          } else if (targetRole === "doctor") {
+            const doctorProfile = {
+              name: mockUser.name,
+              phone: "+91 99999 99999",
+              specialization: targetSpec || "General Physician",
+              degree: targetDegree || "MBBS, MD",
+              experience_years: 8,
+              city: "Delhi",
+              area: "Connaught Place",
+              fees: Number(targetFees) || 300,
+              preferred_conditions: ["Fever & Infections", "Diabetes Management", "Heart & BP Issues"],
+              preferred_age_groups: ["All Ages"],
+              consultation_modes: ["chat"],
+              ai_settings: {
+                ai_assisted_replies: true,
+                auto_patient_summary: true,
+                patient_data_access: "full",
+              },
+              onboarding_completed: true,
+            };
+            localStorage.setItem("healflow-doctor-profile", JSON.stringify(doctorProfile));
+          }
+        }
+
         setLoading(false);
 
         // Route: new signup → onboarding, returning user → dashboard
@@ -170,7 +253,91 @@ export default function LoginPage() {
       setSandboxInfo("Supabase database offline or login failed. Accessing app in Sandboxed Mode.");
       
       setTimeout(() => {
-        if (targetRole === "doctor") {
+        if (isSigningUp && targetRole === "doctor") {
+          try {
+            const storedDocs = localStorage.getItem("healflow-doctors-list");
+            const docs = storedDocs ? JSON.parse(storedDocs) : [];
+            if (!docs.some((d: any) => d.email === targetEmail.trim())) {
+              docs.push({
+                id: "doc-" + Date.now(),
+                email: targetEmail.trim(),
+                name: targetName || "Dr. Local Account",
+                specialization: targetSpec,
+                degree: targetDegree || "MBBS",
+                fees: Number(targetFees) || 300,
+                city: "Delhi",
+                area: "Lajpat Nagar",
+                rating: 4.5,
+                distance: 2.0,
+                phone: "+91 99999 99999",
+                is_approved: false,
+              });
+              localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+            }
+          } catch (e) {
+            console.warn("Error adding local fallback doctor:", e);
+          }
+        }
+
+        // Seed fallback profiles for returning local sandbox users
+        if (!isSigningUp) {
+          if (targetRole === "patient") {
+            const patientProfile = {
+              name: fallbackUser.name,
+              phone: "+91 98765 43210",
+              age: 28,
+              gender: "male" as const,
+              blood_group: "O+",
+              conditions: ["Hypertension (High BP)"],
+              medications: ["Amlodipine 5mg"],
+              allergies: ["Penicillin"],
+              uploaded_reports: [],
+              health_goals: ["Control Blood Pressure", "Improve Sleep"],
+              language_preference: "hinglish" as const,
+              onboarding_completed: true,
+            };
+            localStorage.setItem("healflow-patient-profile", JSON.stringify(patientProfile));
+            
+            const trackerProfile = {
+              name: fallbackUser.name,
+              age: 28,
+              gender: "male" as const,
+              weight_kg: 72,
+              height_cm: 175,
+              conditions: ["Hypertension (High BP)"],
+              medications: ["Amlodipine 5mg"],
+              daily_cal_goal: 2000,
+              step_goal: 8000,
+              sleep_goal_hrs: 8.0,
+            };
+            localStorage.setItem("healflow-health-profile", JSON.stringify(trackerProfile));
+          } else if (targetRole === "doctor") {
+            const doctorProfile = {
+              name: fallbackUser.name,
+              phone: "+91 99999 99999",
+              specialization: targetSpec || "General Physician",
+              degree: targetDegree || "MBBS, MD",
+              experience_years: 8,
+              city: "Delhi",
+              area: "Lajpat Nagar",
+              fees: Number(targetFees) || 300,
+              preferred_conditions: ["Fever & Infections", "Diabetes Management", "Heart & BP Issues"],
+              preferred_age_groups: ["All Ages"],
+              consultation_modes: ["chat"],
+              ai_settings: {
+                ai_assisted_replies: true,
+                auto_patient_summary: true,
+                patient_data_access: "full",
+              },
+              onboarding_completed: true,
+            };
+            localStorage.setItem("healflow-doctor-profile", JSON.stringify(doctorProfile));
+          }
+        }
+
+        if (isSigningUp || !isOnboardingCompleted(targetRole)) {
+          router.push("/onboarding");
+        } else if (targetRole === "doctor") {
           router.push("/doctor-dashboard");
         } else {
           router.push("/");
@@ -263,7 +430,7 @@ export default function LoginPage() {
               cursor: "pointer",
             }}
           >
-            👤 Patient Login
+            👤 Patient {isSignUp ? "Sign Up" : "Login"}
           </button>
           <button
             onClick={() => setRole("doctor")}
@@ -282,7 +449,7 @@ export default function LoginPage() {
               cursor: "pointer",
             }}
           >
-            🩺 Doctor Login
+            🩺 Doctor {isSignUp ? "Sign Up" : "Login"}
           </button>
         </div>
 

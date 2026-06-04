@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { Doctor } from "@/types/doctor";
-import { MapPin, Star, Phone, BadgeCheck, Navigation } from "lucide-react";
+import { MapPin, Star, Phone, BadgeCheck, CalendarDays } from "lucide-react";
 
 interface DoctorCardProps {
   doctor: Doctor;
@@ -12,13 +13,6 @@ export default function DoctorCard({
   isActive = false,
   onClick,
 }: DoctorCardProps) {
-  const feesColor =
-    doctor.fees <= 200
-      ? "var(--severity-low)"
-      : doctor.fees <= 400
-        ? "var(--severity-med)"
-        : "var(--text-secondary)";
-
   return (
     <div
       id={`doctor-card-${doctor.id}`}
@@ -31,41 +25,42 @@ export default function DoctorCard({
           : "var(--shadow-card)",
         padding: "20px",
         cursor: "pointer",
-        transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
-        borderLeft: isActive
-          ? "4px solid var(--purple-primary)"
-          : "4px solid transparent",
+        transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+        border: isActive
+          ? "1.5px solid var(--purple-primary)"
+          : "1.5px solid var(--border)",
         transform: isActive ? "translateY(-2px)" : "none",
       }}
+      className="hover:scale-101"
     >
       <div style={{ display: "flex", gap: "16px", alignItems: "flex-start" }}>
-        {/* Avatar */}
+        {/* Avatar Placeholder */}
         <div
           style={{
             width: "52px",
             height: "52px",
-            borderRadius: "14px",
-            background: "linear-gradient(135deg, #EDE9FE, #F3E8FF)",
+            borderRadius: "12px",
+            background: "rgba(0, 113, 227, 0.05)",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             flexShrink: 0,
             fontFamily: "var(--font-heading)",
             fontWeight: 700,
-            fontSize: "20px",
+            fontSize: "18px",
             color: "var(--purple-primary)",
           }}
         >
           {doctor.name.split(" ").slice(1).map((n) => n[0]).join("")}
         </div>
 
-        {/* Info */}
+        {/* Doctor Information */}
         <div style={{ flex: 1, minWidth: 0 }}>
           <div
             style={{
               display: "flex",
               alignItems: "center",
-              gap: "8px",
+              gap: "6px",
               marginBottom: "4px",
             }}
           >
@@ -73,11 +68,12 @@ export default function DoctorCard({
               style={{
                 fontFamily: "var(--font-heading)",
                 fontSize: "16px",
-                fontWeight: 600,
+                fontWeight: 700,
                 color: "var(--text-primary)",
                 whiteSpace: "nowrap",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                margin: 0,
               }}
             >
               {doctor.name}
@@ -95,7 +91,7 @@ export default function DoctorCard({
               fontFamily: "var(--font-body)",
               fontSize: "13px",
               color: "var(--text-secondary)",
-              marginBottom: "2px",
+              margin: "0 0 2px 0",
             }}
           >
             {doctor.specialization}
@@ -105,12 +101,13 @@ export default function DoctorCard({
               fontFamily: "var(--font-body)",
               fontSize: "12px",
               color: "var(--text-muted)",
+              margin: 0,
             }}
           >
             {doctor.degree}
           </p>
 
-          {/* Stats Row */}
+          {/* Location and Fees Summary Row */}
           <div
             style={{
               display: "flex",
@@ -129,7 +126,7 @@ export default function DoctorCard({
                 fontFamily: "var(--font-body)",
               }}
             >
-              <Star size={14} style={{ color: "var(--accent-yellow)", fill: "var(--accent-yellow)" }} />
+              <Star size={14} style={{ color: "var(--accent-yellow)", fill: "var(--accent-yellow)", border: "none" }} />
               <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>
                 {doctor.rating}
               </span>
@@ -146,54 +143,55 @@ export default function DoctorCard({
               }}
             >
               <MapPin size={14} />
-              <span>{doctor.distance} km</span>
+              <span>{doctor.area || "Noida"} ({doctor.distance} km)</span>
             </div>
 
             <div
               style={{
                 fontFamily: "var(--font-body)",
                 fontSize: "13px",
-                fontWeight: 600,
-                color: feesColor,
+                fontWeight: 700,
+                color: "var(--text-primary)",
               }}
             >
               ₹{doctor.fees}
             </div>
           </div>
 
-          {/* Actions */}
+          {/* Apple-style primary Conversion Action + Secondary Actions */}
           <div
             style={{
               display: "flex",
-              gap: "8px",
-              marginTop: "14px",
+              gap: "10px",
+              marginTop: "16px",
               flexWrap: "wrap",
+              alignItems: "center"
             }}
           >
-            <a
-              href={`https://www.google.com/maps/dir/?api=1&destination=${doctor.lat},${doctor.lng}`}
-              target="_blank"
-              rel="noopener noreferrer"
-              id={`directions-${doctor.id}`}
+            <Link
+              href={`/doctors/${doctor.id}`}
+              id={`book-doctor-${doctor.id}`}
               onClick={(e) => e.stopPropagation()}
               style={{
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "8px 14px",
-                background: "linear-gradient(135deg, #7C3AED, #EC4899)",
+                padding: "8px 16px",
+                background: "var(--purple-primary)",
                 color: "white",
                 fontFamily: "var(--font-body)",
-                fontWeight: 500,
+                fontWeight: 600,
                 fontSize: "12px",
-                borderRadius: "8px",
+                borderRadius: "100px",
                 textDecoration: "none",
                 transition: "all 0.2s ease",
+                boxShadow: "0 4px 12px rgba(0, 113, 227, 0.12)",
               }}
+              className="hover:scale-103"
             >
-              <Navigation size={12} />
-              Directions
-            </a>
+              <CalendarDays size={12} />
+              Book Appointment
+            </Link>
 
             <a
               href={`tel:${doctor.phone}`}
@@ -202,20 +200,21 @@ export default function DoctorCard({
                 display: "inline-flex",
                 alignItems: "center",
                 gap: "6px",
-                padding: "8px 14px",
-                background: "rgba(124,58,237,0.08)",
-                color: "var(--purple-primary)",
+                padding: "8px 16px",
+                background: "var(--bg-surface)",
+                color: "var(--text-secondary)",
                 fontFamily: "var(--font-body)",
                 fontWeight: 500,
                 fontSize: "12px",
-                borderRadius: "8px",
+                borderRadius: "100px",
                 textDecoration: "none",
-                border: "1px solid rgba(124,58,237,0.15)",
+                border: "1px solid var(--border)",
                 transition: "all 0.2s ease",
               }}
+              className="hover:bg-slate-100"
             >
               <Phone size={12} />
-              Call
+              Call Clinic
             </a>
           </div>
         </div>

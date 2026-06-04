@@ -342,7 +342,7 @@ export default function HealthBotPage() {
                   margin: "0 0 4px",
                 }}
               >
-                Kuch example queries:
+                Try these common queries:
               </p>
               <div
                 style={{

@@ -1,17 +1,21 @@
 "use client";
 
-import { useState, useMemo, useEffect } from "react";
+import { useState, useMemo, useEffect, Suspense } from "react";
+import { useSearchParams } from "next/navigation";
 import DoctorCard from "@/components/doctor-card";
 import { MOCK_DOCTORS, filterDoctors, getUniqueSpecializations } from "@/lib/doctors";
 import { Search, Filter, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Doctor } from "@/types/doctor";
 
-export default function DoctorsPage() {
+function DoctorsListContent() {
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get("search") || "";
+
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [maxFees, setMaxFees] = useState(1000);
   const [activeDoctor, setActiveDoctor] = useState<string | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState(initialSearch);
   
   const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
   const [loading, setLoading] = useState(true);
@@ -24,22 +28,45 @@ export default function DoctorsPage() {
     console.warn("Supabase client not initialized:", e);
   }
 
+  // Update searchQuery state if initialSearch changes
+  useEffect(() => {
+    if (initialSearch) {
+      setSearchQuery(initialSearch);
+    }
+  }, [initialSearch]);
+
   useEffect(() => {
     async function fetchDoctors() {
+      // Initialize local storage doctors list if not exists
+      let localDocs: Doctor[] = [];
+      try {
+        const stored = localStorage.getItem("healflow-doctors-list");
+        if (stored) {
+          localDocs = JSON.parse(stored);
+        } else {
+          localDocs = MOCK_DOCTORS.map(d => ({ ...d, is_approved: true }));
+          localStorage.setItem("healflow-doctors-list", JSON.stringify(localDocs));
+        }
+      } catch (e) {
+        console.warn("Failed to read/write local doctors list:", e);
+      }
+
       if (!supabase) {
+        const approvedLocal = localDocs.filter((d: any) => d.is_approved === true);
+        setDoctors(approvedLocal);
         setLoading(false);
         return;
       }
+
       try {
         const { data, error } = await supabase
           .from("profiles")
           .select("*")
-          .eq("role", "doctor");
+          .eq("role", "doctor")
+          .eq("is_approved", true);
 
         if (error) {
-          console.error("Error fetching doctors:", error);
-          setLoading(false);
-          return;
+          throw error;
         }
 
         if (data && data.length > 0) {
@@ -72,9 +99,13 @@ export default function DoctorsPage() {
             imageUrl: d.avatar_url || undefined,
           }));
           setDoctors(mappedDoctors);
+        } else {
+          setDoctors([]);
         }
       } catch (err) {
-        console.error("Failed to fetch doctors:", err);
+        console.warn("Failed to fetch doctors from database, using local storage list fallback:", err);
+        const approvedLocal = localDocs.filter((d: any) => d.is_approved === true);
+        setDoctors(approvedLocal);
       } finally {
         setLoading(false);
       }
@@ -100,20 +131,22 @@ export default function DoctorsPage() {
   }, [doctors, selectedSpecialization, maxFees, searchQuery]);
 
   return (
-    <div style={{ minHeight: "100vh", background: "var(--bg-surface)" }}>
-      <div style={{ maxWidth: "1200px", margin: "0 auto", padding: "48px 24px" }}>
+    <div style={{ minHeight: "100vh", background: "var(--bg-surface)", padding: "40px 24px" }}>
+      <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+        
         {/* Header */}
         <div style={{ marginBottom: "32px" }}>
           <h1
             style={{
               fontFamily: "var(--font-heading)",
               fontSize: "28px",
-              fontWeight: 700,
+              fontWeight: 800,
               color: "var(--text-primary)",
-              marginBottom: "4px",
+              marginBottom: "6px",
+              letterSpacing: "-0.02em"
             }}
           >
-            📍 Apne Area Ke Doctors
+            Directory of Specialists
           </h1>
           <p
             style={{
@@ -122,39 +155,40 @@ export default function DoctorsPage() {
               color: "var(--text-secondary)",
             }}
           >
-            Nearby verified doctors — directions lo, call karo
+            Locate and book certified Vitalis practitioners. Filter by location, cost, or expertise.
           </p>
         </div>
 
-        {/* Filter Bar */}
+        {/* Filter Bar (Apple-style minimalist control bar) */}
         <div
           id="doctor-filters"
           style={{
             display: "flex",
-            gap: "12px",
+            gap: "14px",
             marginBottom: "24px",
             flexWrap: "wrap",
             alignItems: "center",
-            padding: "16px 20px",
+            padding: "12px 18px",
             background: "var(--bg-card)",
-            borderRadius: "14px",
+            border: "1px solid var(--border)",
+            borderRadius: "16px",
             boxShadow: "var(--shadow-card)",
           }}
         >
-          <Filter size={18} style={{ color: "var(--text-muted)" }} />
+          <Filter size={18} style={{ color: "var(--text-secondary)" }} />
 
-          {/* Name/Area Search Input */}
-          <div style={{ position: "relative", flex: 1, minWidth: "200px" }}>
-            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
+          {/* Search Box */}
+          <div style={{ position: "relative", flex: 1, minWidth: "220px" }}>
+            <Search size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-muted)" }} />
             <input
               type="text"
-              placeholder="Search doctor, specialization, or city..."
+              placeholder="Search specialists, clinic areas, or cities..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               style={{
                 width: "100%",
                 padding: "8px 12px 8px 36px",
-                borderRadius: "8px",
+                borderRadius: "100px",
                 border: "1px solid var(--border)",
                 background: "var(--bg-surface)",
                 color: "var(--text-primary)",
@@ -165,19 +199,19 @@ export default function DoctorsPage() {
             />
           </div>
 
-          {/* Specialization Filter */}
+          {/* Specialization selector */}
           <select
             id="specialization-filter"
             value={selectedSpecialization}
             onChange={(e) => setSelectedSpecialization(e.target.value)}
             style={{
-              padding: "8px 16px",
-              borderRadius: "8px",
+              padding: "8px 14px",
+              borderRadius: "100px",
               border: "1px solid var(--border)",
               fontFamily: "var(--font-body)",
               fontSize: "13px",
               color: "var(--text-primary)",
-              background: "white",
+              background: "var(--bg-card)",
               cursor: "pointer",
               outline: "none",
             }}
@@ -189,7 +223,7 @@ export default function DoctorsPage() {
             ))}
           </select>
 
-          {/* Fees Filter */}
+          {/* Fees filter slider */}
           <div
             style={{
               display: "flex",
@@ -200,7 +234,7 @@ export default function DoctorsPage() {
               color: "var(--text-secondary)",
             }}
           >
-            <span>Fees: ₹0</span>
+            <span>Fees:</span>
             <input
               type="range"
               id="fees-filter"
@@ -210,31 +244,33 @@ export default function DoctorsPage() {
               value={maxFees}
               onChange={(e) => setMaxFees(Number(e.target.value))}
               style={{
-                width: "120px",
+                width: "100px",
                 accentColor: "var(--purple-primary)",
                 cursor: "pointer",
               }}
             />
-            <span>₹{maxFees}</span>
+            <span style={{ fontWeight: 600 }}>₹{maxFees}</span>
           </div>
 
+          {/* Result Count */}
           <span
             style={{
               fontFamily: "var(--font-body)",
               fontSize: "12px",
-              color: "var(--text-muted)",
+              color: "var(--text-secondary)",
               marginLeft: "auto",
+              fontWeight: 500,
             }}
           >
-            {filteredDoctors.length} doctors found
+            {filteredDoctors.length} found
           </span>
         </div>
 
-        {/* Content: Doctor List + Map */}
+        {/* Content Layout */}
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "1.2fr 1fr",
             gap: "24px",
           }}
           className="doctors-grid"
@@ -247,33 +283,35 @@ export default function DoctorsPage() {
               gap: "16px",
               maxHeight: "calc(100vh - 280px)",
               overflowY: "auto",
-              paddingRight: "8px",
+              paddingRight: "6px",
             }}
           >
-            {filteredDoctors.length === 0 ? (
+            {loading ? (
+              <div style={{ padding: "48px 24px", textAlign: "center", color: "var(--text-secondary)" }}>
+                Loading verified doctors...
+              </div>
+            ) : filteredDoctors.length === 0 ? (
               <div
                 style={{
                   padding: "48px 24px",
                   textAlign: "center",
                   background: "var(--bg-card)",
+                  border: "1px dashed var(--border)",
                   borderRadius: "16px",
-                  boxShadow: "var(--shadow-card)",
                 }}
               >
-                <Search
-                  size={48}
-                  style={{ color: "var(--text-muted)", margin: "0 auto 16px" }}
-                />
+                <Search size={40} style={{ color: "var(--text-muted)", margin: "0 auto 16px" }} />
                 <p
                   style={{
                     fontFamily: "var(--font-body)",
-                    fontSize: "15px",
+                    fontSize: "14px",
                     color: "var(--text-secondary)",
+                    margin: 0,
                   }}
                 >
-                  Koi doctor nahi mila is filter mein.
+                  No active doctors match the selected filters.
                   <br />
-                  Filter change karke try karo.
+                  Try expanding your search query or adjusting limits.
                 </p>
               </div>
             ) : (
@@ -288,11 +326,12 @@ export default function DoctorsPage() {
             )}
           </div>
 
-          {/* Map Placeholder */}
+          {/* Interactive Map Placeholder (Redesigned in Apple light map styles) */}
           <div
             className="map-container"
             style={{
               background: "var(--bg-card)",
+              border: "1px solid var(--border)",
               borderRadius: "16px",
               boxShadow: "var(--shadow-card)",
               overflow: "hidden",
@@ -300,12 +339,11 @@ export default function DoctorsPage() {
               position: "relative",
             }}
           >
-            {/* Map Background */}
             <div
               style={{
                 width: "100%",
                 height: "100%",
-                background: "linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)",
+                background: "linear-gradient(135deg, #EBF3FC 0%, #F5F9FD 100%)",
                 display: "flex",
                 flexDirection: "column",
                 alignItems: "center",
@@ -314,20 +352,24 @@ export default function DoctorsPage() {
                 position: "relative",
               }}
             >
-              {/* Grid lines to simulate map */}
+              {/* Map grid lines simulation */}
               <div
                 style={{
                   position: "absolute",
                   inset: 0,
                   backgroundImage: `
-                    linear-gradient(rgba(124,58,237,0.08) 1px, transparent 1px),
-                    linear-gradient(90deg, rgba(124,58,237,0.08) 1px, transparent 1px)
+                    linear-gradient(rgba(0,113,227,0.03) 1.5px, transparent 1.5px),
+                    linear-gradient(90deg, rgba(0,113,227,0.03) 1.5px, transparent 1.5px)
                   `,
-                  backgroundSize: "40px 40px",
+                  backgroundSize: "32px 32px",
                 }}
               />
 
-              {/* Doctor Pins */}
+              {/* Simulated streets lines for visual richness */}
+              <div style={{ position: "absolute", top: "30%", left: 0, right: 0, height: "16px", background: "white", transform: "rotate(-5deg)", opacity: 0.8 }} />
+              <div style={{ position: "absolute", left: "40%", top: 0, bottom: 0, width: "20px", background: "white", transform: "rotate(20deg)", opacity: 0.8 }} />
+
+              {/* Pins of Specialists */}
               {filteredDoctors.map((doctor, i) => (
                 <div
                   key={doctor.id}
@@ -335,47 +377,47 @@ export default function DoctorsPage() {
                   style={{
                     position: "absolute",
                     left: `${20 + (i * 15) % 60}%`,
-                    top: `${15 + (i * 20) % 65}%`,
+                    top: `${20 + (i * 18) % 60}%`,
                     cursor: "pointer",
-                    transition: "all 0.3s ease",
-                    transform: activeDoctor === doctor.id ? "scale(1.3)" : "scale(1)",
+                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                    transform: activeDoctor === doctor.id ? "scale(1.2)" : "scale(1)",
                     zIndex: activeDoctor === doctor.id ? 10 : 1,
                   }}
                 >
                   <div
                     style={{
-                      width: activeDoctor === doctor.id ? "40px" : "32px",
-                      height: activeDoctor === doctor.id ? "40px" : "32px",
+                      width: "34px",
+                      height: "34px",
                       borderRadius: "50% 50% 50% 0%",
                       transform: "rotate(-45deg)",
                       background: activeDoctor === doctor.id
-                        ? "linear-gradient(135deg, #7C3AED, #EC4899)"
+                        ? "linear-gradient(135deg, #0071E3, #3897FD)"
                         : "var(--purple-primary)",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
                       boxShadow: activeDoctor === doctor.id
-                        ? "0 0 20px rgba(124,58,237,0.5)"
-                        : "0 2px 8px rgba(0,0,0,0.3)",
+                        ? "0 4px 12px rgba(0,113,227,0.3)"
+                        : "0 2px 6px rgba(0,0,0,0.1)",
                     }}
                   >
                     <MapPin
-                      size={activeDoctor === doctor.id ? 18 : 14}
+                      size={14}
                       style={{ color: "white", transform: "rotate(45deg)" }}
                     />
                   </div>
                   {activeDoctor === doctor.id && (
                     <div
-                      className="animate-pop-in"
+                      className="animate-pop-in animate-card"
                       style={{
                         position: "absolute",
                         top: "calc(100% + 8px)",
                         left: "50%",
                         transform: "translateX(-50%)",
-                        background: "var(--bg-card-dark)",
-                        border: "1px solid rgba(255,255,255,0.1)",
-                        borderRadius: "10px",
-                        padding: "10px 14px",
+                        background: "var(--bg-card)",
+                        border: "1px solid var(--border)",
+                        borderRadius: "12px",
+                        padding: "8px 12px",
                         whiteSpace: "nowrap",
                         boxShadow: "var(--shadow-dark)",
                       }}
@@ -384,8 +426,9 @@ export default function DoctorsPage() {
                         style={{
                           fontFamily: "var(--font-body)",
                           fontSize: "12px",
-                          fontWeight: 600,
-                          color: "var(--text-white)",
+                          fontWeight: 700,
+                          color: "var(--text-primary)",
+                          margin: 0,
                         }}
                       >
                         {doctor.name}
@@ -394,7 +437,8 @@ export default function DoctorsPage() {
                         style={{
                           fontFamily: "var(--font-body)",
                           fontSize: "11px",
-                          color: "var(--text-muted)",
+                          color: "var(--text-secondary)",
+                          margin: 0,
                         }}
                       >
                         {doctor.specialization} • ₹{doctor.fees}
@@ -404,21 +448,23 @@ export default function DoctorsPage() {
                 </div>
               ))}
 
-              {/* Map Label */}
+              {/* Map Footer Tag */}
               <div
                 style={{
                   position: "absolute",
                   bottom: "16px",
                   right: "16px",
-                  background: "rgba(0,0,0,0.6)",
+                  background: "var(--bg-card)",
+                  border: "1px solid var(--border)",
                   padding: "6px 12px",
-                  borderRadius: "8px",
+                  borderRadius: "100px",
                   fontFamily: "var(--font-body)",
                   fontSize: "11px",
-                  color: "var(--text-muted)",
+                  color: "var(--text-secondary)",
+                  boxShadow: "var(--shadow-card)",
                 }}
               >
-                📍 Interactive Map • Click pins for details
+                📍 Vitalis Maps • Click pins to details
               </div>
             </div>
           </div>
@@ -431,11 +477,19 @@ export default function DoctorsPage() {
             grid-template-columns: 1fr !important;
           }
           .map-container {
-            min-height: 300px !important;
+            min-height: 280px !important;
             order: -1;
           }
         }
       `}</style>
     </div>
+  );
+}
+
+export default function DoctorsPage() {
+  return (
+    <Suspense fallback={<div style={{ padding: "80px 24px", textAlign: "center", color: "var(--text-secondary)" }}>Loading specialists directory...</div>}>
+      <DoctorsListContent />
+    </Suspense>
   );
 }

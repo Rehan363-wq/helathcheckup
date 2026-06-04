@@ -60,6 +60,7 @@ export interface DailyLog {
   energy_level: number;   // 1-10
   daily_score?: number;   // 1-10, AI or algo calculated
   ai_summary?: string;
+  custom_mood_text?: string;
 }
 
 export interface HealthChatMessage {

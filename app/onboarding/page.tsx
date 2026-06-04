@@ -21,6 +21,7 @@ export default function OnboardingPage() {
   const [role, setRole] = useState<"patient" | "doctor">("patient");
   const [step, setStep] = useState(1);
   const [animating, setAnimating] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   // Patient state
   const [patient, setPatient] = useState<PatientProfile>(getDefaultPatientProfile());
@@ -132,6 +133,45 @@ export default function OnboardingPage() {
   }, []);
 
   const goNext = () => {
+    setError(null);
+    if (step === 1) {
+      if (role === "patient") {
+        if (!patient.name.trim()) {
+          setError("Aapka naam likhna zaroori hai (Name is required).");
+          return;
+        }
+        if (!patient.phone.trim()) {
+          setError("Mobile number likhna zaroori hai (Phone is required).");
+          return;
+        }
+        if (!patient.age || patient.age <= 0) {
+          setError("Kripya sahi umar bharein (Please enter a valid age).");
+          return;
+        }
+      } else {
+        if (!doctor.name.trim()) {
+          setError("Doctor's name is required.");
+          return;
+        }
+        if (!doctor.phone.trim()) {
+          setError("Phone number is required.");
+          return;
+        }
+        if (!doctor.degree.trim()) {
+          setError("Medical degree (e.g. MBBS) is required.");
+          return;
+        }
+        if (!doctor.city.trim()) {
+          setError("City is required.");
+          return;
+        }
+        if (!doctor.area.trim()) {
+          setError("Clinic area is required.");
+          return;
+        }
+      }
+    }
+
     if (step >= totalSteps) return handleComplete();
     setAnimating(true);
     setTimeout(() => { setStep(s => s + 1); setAnimating(false); }, 200);
@@ -139,6 +179,7 @@ export default function OnboardingPage() {
 
   const goBack = () => {
     if (step <= 1) return;
+    setError(null);
     setAnimating(true);
     setTimeout(() => { setStep(s => s - 1); setAnimating(false); }, 200);
   };
@@ -306,9 +347,52 @@ export default function OnboardingPage() {
       {/* Step Content */}
       <div style={{ ...cardStyle, opacity: animating ? 0 : 1, transform: animating ? "translateY(12px)" : "none", transition: "all 0.25s ease" }}>
 
+        {error && (
+          <div
+            style={{
+              background: "rgba(239,68,68,0.06)",
+              border: "1px solid rgba(239,68,68,0.15)",
+              padding: "12px 16px",
+              borderRadius: "10px",
+              color: "var(--severity-high)",
+              fontSize: "13px",
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              marginBottom: "20px",
+            }}
+          >
+            <Shield size={16} />
+            {error}
+          </div>
+        )}
+
         {/* ===== PATIENT STEPS ===== */}
         {role === "patient" && step === 1 && (
           <div>
+            {/* Welcome Banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(59,130,246,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+                border: "1.5px solid rgba(59,130,246,0.15)",
+                borderRadius: "16px",
+                padding: "18px",
+                marginBottom: "28px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+              }}
+            >
+              <div style={{ fontSize: "28px" }}>👋</div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                  Welcome to HealFlow AI!
+                </h4>
+                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  Kripya apni details bharein taaki AI aapki health reports aur questions ko sahi se samajh sake.
+                </p>
+              </div>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(59,130,246,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3B82F6" }}>
                 <User size={22} />
@@ -599,6 +683,29 @@ export default function OnboardingPage() {
         {/* ===== DOCTOR STEPS ===== */}
         {role === "doctor" && step === 1 && (
           <div>
+            {/* Welcome Banner */}
+            <div
+              style={{
+                background: "linear-gradient(135deg, rgba(236,72,153,0.08) 0%, rgba(139,92,246,0.08) 100%)",
+                border: "1.5px solid rgba(236,72,153,0.15)",
+                borderRadius: "16px",
+                padding: "18px",
+                marginBottom: "28px",
+                display: "flex",
+                alignItems: "center",
+                gap: "14px",
+              }}
+            >
+              <div style={{ fontSize: "28px" }}>🩺</div>
+              <div>
+                <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
+                  Setup Your Practice Profile
+                </h4>
+                <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
+                  Configure your specialty and consultation fee to start receiving patient requests with AI summaries.
+                </p>
+              </div>
+            </div>
             <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "24px" }}>
               <div style={{ width: "44px", height: "44px", borderRadius: "14px", background: "rgba(59,130,246,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "#3B82F6" }}>
                 <Stethoscope size={22} />
@@ -777,7 +884,7 @@ export default function OnboardingPage() {
           )}
 
           <div style={{ display: "flex", gap: "8px" }}>
-            {step < totalSteps && (
+            {step < totalSteps && step > 1 && (
               <button onClick={goNext} style={{
                 padding: "12px 20px", borderRadius: "12px", border: "1px solid var(--border)",
                 background: "var(--bg-card)", color: "var(--text-secondary)",
