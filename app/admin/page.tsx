@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo, useCallback } from "react";
 import { createClient } from "@/lib/supabase/client";
 import { Doctor } from "@/types/doctor";
 import { MOCK_DOCTORS } from "@/lib/doctors";
@@ -16,15 +16,11 @@ export default function AdminPage() {
   const [message, setMessage] = useState<{ type: "success" | "error"; text: string } | null>(null);
 
   // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Check auth session
   useEffect(() => {
+    document.title = "Admin Portal — HealFlow AI";
     if (typeof window !== "undefined") {
       const isAdmin = sessionStorage.getItem("healflow-admin-auth");
       if (isAdmin === "true") {
@@ -35,7 +31,8 @@ export default function AdminPage() {
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === "admin123") {
+    const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "admin123";
+    if (password === adminSecret) {
       sessionStorage.setItem("healflow-admin-auth", "true");
       setIsAuthenticated(true);
       setAuthError("");
@@ -51,7 +48,7 @@ export default function AdminPage() {
   };
 
   // Fetch doctors (both from Supabase and Local Storage list)
-  const fetchAllDoctors = async () => {
+  const fetchAllDoctors = useCallback(async () => {
     setLoading(true);
     setMessage(null);
 
@@ -114,13 +111,13 @@ export default function AdminPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [supabase]);
 
   useEffect(() => {
     if (isAuthenticated) {
       fetchAllDoctors();
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, fetchAllDoctors]);
 
   // Approve Doctor listing
   const handleApprove = async (docId: string, email: string) => {
@@ -242,7 +239,7 @@ export default function AdminPage() {
                   type="password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter key (admin123)"
+                  placeholder="Enter admin passkey"
                   style={{
                     width: "100%", padding: "10px 12px 10px 36px", borderRadius: "8px", border: "1px solid var(--border)",
                     background: "var(--bg-surface)", color: "var(--text-primary)", fontSize: "14px", outline: "none",

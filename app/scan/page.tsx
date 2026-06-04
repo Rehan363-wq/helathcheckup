@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UploadZone from "@/components/upload-zone";
 import ResultCard from "@/components/result-card";
 import LoadingSkeleton from "@/components/loading-skeleton";
@@ -14,6 +14,10 @@ export default function ScanPage() {
   const [imagePreview, setImagePreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = "Skin Analyzer — HealFlow AI";
+  }, []);
+
   const handleFileSelect = async (file: File) => {
     setError(null);
     setResult(null);
@@ -25,11 +29,13 @@ export default function ScanPage() {
 
     // Retrieve active patient session
     let patientId = null;
+    let token = "sandbox";
     try {
       const sessionStr = localStorage.getItem("healflow-session");
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
         patientId = session.id || null;
+        token = session.email || "sandbox";
       }
     } catch (e) {}
 
@@ -38,7 +44,10 @@ export default function ScanPage() {
 
       const response = await fetch("/api/analyze/skin", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           imageBase64: base64,
           mimeType: file.type,
@@ -193,11 +202,13 @@ export default function ScanPage() {
                         const reader = new FileReader();
                         // Retrieve active patient session
                         let patientId = null;
+                        let token = "sandbox";
                         try {
                           const sessionStr = localStorage.getItem("healflow-session");
                           if (sessionStr) {
                             const session = JSON.parse(sessionStr);
                             patientId = session.id || null;
+                            token = session.email || "sandbox";
                           }
                         } catch (e) {}
 
@@ -206,7 +217,10 @@ export default function ScanPage() {
                           try {
                             const response = await fetch("/api/analyze/skin", {
                               method: "POST",
-                              headers: { "Content-Type": "application/json" },
+                              headers: { 
+                                "Content-Type": "application/json",
+                                "Authorization": `Bearer ${token}`
+                              },
                               body: JSON.stringify({
                                 imageBase64: base64,
                                 mimeType: file.type,
@@ -348,11 +362,11 @@ export default function ScanPage() {
                 }}
               >
                 {[
-                  "Acchi lighting mein photo lo",
-                  "Close-up photo lo — clear dikhna chahiye",
-                  "Koi filter mat lagao",
-                  "Affected area focus mein ho",
-                  "Multiple angles se try karo",
+                  "Ensure good, bright lighting",
+                  "Take a clear close-up photo",
+                  "Do not use filters or modifications",
+                  "Keep the affected area in focus",
+                  "Take photos from multiple angles if needed",
                 ].map((tip, i) => (
                   <li
                     key={i}
@@ -407,7 +421,7 @@ export default function ScanPage() {
               color: "var(--text-secondary)",
             }}
           >
-            <strong>Disclaimer:</strong> Ye AI analysis hai, professional medical advice nahi. Serious symptoms mein turant doctor se milein.
+            <strong>Disclaimer:</strong> This is an AI analysis, not professional medical advice. Consult a doctor immediately for serious symptoms.
           </p>
         </div>
       </div>

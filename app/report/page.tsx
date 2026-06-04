@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import UploadZone from "@/components/upload-zone";
 import LoadingSkeleton from "@/components/loading-skeleton";
 import SeverityBadge from "@/components/severity-badge";
@@ -8,9 +8,42 @@ import { ReportAnalysis } from "@/types/report";
 import { fileToBase64 } from "@/lib/utils";
 import { AlertTriangle, RotateCcw, MapPin, ArrowRight, Share2 } from "lucide-react";
 import Link from "next/link";
+const parseRange = (rangeStr: string) => {
+  if (!rangeStr) return { minRange: 0, maxRange: 100 };
+  const parts = rangeStr.split("-").map(p => parseFloat(p.trim()));
+  if (parts.length === 2 && !isNaN(parts[0]) && !isNaN(parts[1])) {
+    return { minRange: parts[0], maxRange: parts[1] };
+  }
+  const nums = rangeStr.match(/([0-9.]+)/g);
+  if (nums && nums.length >= 2) {
+    return { minRange: parseFloat(nums[0]), maxRange: parseFloat(nums[1]) };
+  }
+  return { minRange: 0, maxRange: 100 };
+};
+
+const extractUnitAndValue = (valueStr: string, rangeStr: string) => {
+  if (!valueStr) return { value: 0, unit: "" };
+  const cleanVal = valueStr.trim();
+  const valMatch = cleanVal.match(/^([0-9.]+)\s*([a-zA-Z/%_]+)$/);
+  if (valMatch) {
+    return { value: parseFloat(valMatch[1]), unit: valMatch[2] };
+  }
+  const cleanRange = (rangeStr || "").trim();
+  const rangeMatch = cleanRange.match(/[0-9.]+\s*-\s*[0-9.]+\s*([a-zA-Z/%_]+)$/);
+  if (rangeMatch) {
+    const num = parseFloat(cleanVal);
+    return { value: isNaN(num) ? 0 : num, unit: rangeMatch[1] };
+  }
+  const num = parseFloat(cleanVal);
+  return { value: isNaN(num) ? 0 : num, unit: "" };
+};
 
 export default function ReportPage() {
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    document.title = "Report Explainer — HealFlow AI";
+  }, []);
   const [result, setResult] = useState<ReportAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -21,11 +54,13 @@ export default function ReportPage() {
 
     // Retrieve active patient session
     let patientId = null;
+    let token = "sandbox";
     try {
       const sessionStr = localStorage.getItem("healflow-session");
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
         patientId = session.id || null;
+        token = session.email || "sandbox";
       }
     } catch (e) {}
 
@@ -35,7 +70,10 @@ export default function ReportPage() {
 
       const response = await fetch("/api/analyze/report", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({
           imageBase64: base64,
           mimeType: file.type,
@@ -50,6 +88,24 @@ export default function ReportPage() {
 
       const data: ReportAnalysis = await response.json();
       setResult(data);
+
+      try {
+        const mappedResults = data.parameters.map((p) => {
+          const range = parseRange(p.normalRange);
+          const valUnit = extractUnitAndValue(p.value, p.normalRange);
+          return {
+            name: p.name,
+            value: valUnit.value,
+            unit: valUnit.unit || "units",
+            minRange: range.minRange,
+            maxRange: range.maxRange,
+            status: p.status === "normal" ? "optimal" : p.status,
+          };
+        });
+        localStorage.setItem("healflow-lab-results", JSON.stringify(mappedResults));
+      } catch (err) {
+        console.warn("Failed to store lab results:", err);
+      }
     } catch (err) {
       setError(
         err instanceof Error ? err.message : "Something went wrong. Please try again."
@@ -190,11 +246,13 @@ export default function ReportPage() {
 
                     // Retrieve active patient session
                     let patientId = null;
+                    let token = "sandbox";
                     try {
                       const sessionStr = localStorage.getItem("healflow-session");
                       if (sessionStr) {
                         const session = JSON.parse(sessionStr);
                         patientId = session.id || null;
+                        token = session.email || "sandbox";
                       }
                     } catch (e) {}
 
@@ -206,7 +264,10 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
 
                     const response = await fetch("/api/analyze/report", {
                       method: "POST",
-                      headers: { "Content-Type": "application/json" },
+                      headers: { 
+                        "Content-Type": "application/json",
+                        "Authorization": `Bearer ${token}`
+                      },
                       body: JSON.stringify({
                         reportText: demoText,
                         isImage: false,
@@ -342,7 +403,7 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
                   gridTemplateColumns: "2fr 1fr 1fr 100px",
                   gap: "16px",
                   padding: "16px 20px",
-                  background: "#F9FAFB",
+                  background: "var(--bg-surface)",
                   borderBottom: "1px solid var(--border)",
                 }}
               >
@@ -372,8 +433,8 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
                     gridTemplateColumns: "2fr 1fr 1fr 100px",
                     gap: "16px",
                     padding: "14px 20px",
-                    background: i % 2 === 1 ? "#FAFAFA" : "transparent",
-                    borderBottom: "1px solid rgba(0,0,0,0.04)",
+                    background: i % 2 === 1 ? "rgba(128, 128, 128, 0.05)" : "transparent",
+                    borderBottom: "1px solid var(--border)",
                     alignItems: "center",
                   }}
                 >
@@ -546,7 +607,7 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
         >
           <AlertTriangle size={16} style={{ color: "var(--severity-med)", flexShrink: 0 }} />
           <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-secondary)" }}>
-            <strong>Disclaimer:</strong> Ye AI analysis hai, professional medical advice nahi. Results doctor se confirm karo.
+            <strong>Disclaimer:</strong> This is an AI analysis, not professional medical advice. Always confirm results with a certified doctor.
           </p>
         </div>
       </div>

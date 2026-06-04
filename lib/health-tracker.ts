@@ -259,8 +259,11 @@ export function saveProfile(profile: HealthProfile): void {
   localStorage.setItem(STORAGE_KEYS.PROFILE, JSON.stringify(profile));
 }
 
-export function getTodayDateStr(): string {
-  return new Date().toISOString().split("T")[0];
+export function getTodayDateStr(d: Date = new Date()): string {
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 export function getDefaultDailyLog(date?: string): DailyLog {
@@ -311,7 +314,7 @@ export function loadWeekHistory(): DayHistoryEntry[] {
   for (let i = 6; i >= 0; i--) {
     const d = new Date(today);
     d.setDate(d.getDate() - i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = getTodayDateStr(d);
     const log = loadLogForDate(dateStr);
 
     if (log) {

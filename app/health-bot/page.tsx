@@ -33,6 +33,10 @@ export default function HealthBotPage() {
   ];
 
   useEffect(() => {
+    document.title = "AI Health Bot — HealFlow AI";
+  }, []);
+
+  useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages, loading]);
 
@@ -55,9 +59,16 @@ export default function HealthBotPage() {
         content: m.content,
       }));
 
+      const sessionStr = localStorage.getItem("healflow-session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      const token = session?.email || "sandbox";
+
       const res = await fetch("/api/chat/bot", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ messages: history, patientContext: buildPatientContextForAI() }),
       });
 
@@ -402,7 +413,7 @@ export default function HealthBotPage() {
               margin: 0,
             }}
           >
-            <strong>Disclaimer:</strong> AI Health Bot diagnosis nahi karta. Worsening symptoms mein doctor se salah lein.
+            <strong>Disclaimer:</strong> AI Health Bot does not provide diagnosis. If symptoms worsen, please consult a certified doctor.
           </p>
         </div>
 

@@ -255,7 +255,7 @@ export async function runHealthCoach(
 
   const contents = [
     { role: "user" as const, parts: [{ text: HEALTH_COACH_SYSTEM_PROMPT }] },
-    { role: "model" as const, parts: [{ text: "Understood. I am MediScan Health Coach. I will respond in Hinglish with strict JSON format." }] },
+    { role: "model" as const, parts: [{ text: "Understood. I am HealFlow Health Coach. I will respond in Hinglish with strict JSON format." }] },
     { role: "user" as const, parts: [{ text: `Current user health data:\n${healthDataJson}` }] },
     { role: "model" as const, parts: [{ text: '{"reply": "Data received. Ready to help!", "daily_score": null, "alert": null, "tip": null}' }] },
     ...history.map((msg) => ({

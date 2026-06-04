@@ -1,9 +1,13 @@
 import { analyzeSkinImage } from "@/lib/gemini";
 import { createServiceClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
+import { validateApiRequest } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateApiRequest(request)) {
+      return Response.json({ error: "Unauthorized access" }, { status: 401 });
+    }
     const body = await request.json();
     const { imageBase64, mimeType, patientId } = body;
 

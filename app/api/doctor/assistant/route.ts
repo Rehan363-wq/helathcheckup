@@ -1,8 +1,12 @@
 import { runDoctorAssistant } from "@/lib/gemini";
 import { NextRequest } from "next/server";
+import { validateApiRequest } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateApiRequest(request)) {
+      return Response.json({ error: "Unauthorized access" }, { status: 401 });
+    }
     const body = await request.json();
     const { doctorContext, patientSummary, query } = body;
 

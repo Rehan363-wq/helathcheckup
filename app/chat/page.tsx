@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { MOCK_DOCTORS } from "@/lib/doctors";
@@ -34,16 +34,11 @@ export default function ChatPage() {
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   
-  // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Check login session
   useEffect(() => {
+    document.title = "Consultation Chat — HealFlow AI";
     const session = localStorage.getItem("healflow-session");
     if (!session) {
       router.push("/login");
@@ -86,18 +81,29 @@ export default function ChatPage() {
     };
 
     const useFallbackDoctors = () => {
-      const formattedMocks = MOCK_DOCTORS.map((d) => ({
+      let localDocs = [];
+      try {
+        const stored = localStorage.getItem("healflow-doctors-list");
+        if (stored) {
+          localDocs = JSON.parse(stored);
+        } else {
+          localDocs = MOCK_DOCTORS.map(d => ({ ...d, is_approved: true }));
+        }
+      } catch (e) {}
+
+      const approvedLocal = localDocs.filter((d: any) => d.is_approved === true);
+      const formatted = approvedLocal.map((d: any) => ({
         id: d.id,
         full_name: d.name,
         role: "doctor",
         specialization: d.specialization,
       }));
-      setDoctors(formattedMocks);
+      setDoctors(formatted);
       setDbStatus("Sandbox Mode: Loaded Pre-verified Doctors");
     };
 
     loadDoctors();
-  }, []);
+  }, [supabase]);
 
   // Load messages when selected doctor changes
   useEffect(() => {
@@ -240,9 +246,14 @@ export default function ChatPage() {
         const { loadPatientProfile } = await import("@/lib/user-profile");
         const patientProfile = loadPatientProfile();
 
+        const token = currentUser?.email || "sandbox";
+
         const response = await fetch("/api/chat/doctor", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { 
+            "Content-Type": "application/json",
+            "Authorization": `Bearer ${token}`
+          },
           body: JSON.stringify({
             messages: [...messages, newMsg],
             doctorProfile: selectedDoctor,

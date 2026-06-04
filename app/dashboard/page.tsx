@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import Link from "next/link";
 import { 
   Activity, 
@@ -62,6 +62,7 @@ const DEFAULT_LAB_RESULTS: LabResult[] = [
 export default function PatientDashboard() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [medications, setMedications] = useState<Medication[]>([]);
+  const [labResults, setLabResults] = useState<LabResult[]>([]);
   const [patientName, setPatientName] = useState("Guest Patient");
 
   // Medication Form State
@@ -72,6 +73,7 @@ export default function PatientDashboard() {
 
   // Sync data from localStorage
   useEffect(() => {
+    document.title = "Patient Dashboard — HealFlow AI";
     if (typeof window !== "undefined") {
       // 1. User Session
       const session = localStorage.getItem("healflow-session");
@@ -88,7 +90,45 @@ export default function PatientDashboard() {
       const storedApts = localStorage.getItem("healflow-appointments");
       if (storedApts) {
         try {
-          setAppointments(JSON.parse(storedApts));
+          const apts = JSON.parse(storedApts);
+          const now = new Date();
+          const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+          let changed = false;
+
+          const updatedApts = apts.map((apt: any) => {
+            if (apt.status === "confirmed") {
+              if (apt.date < todayStr) {
+                changed = true;
+                return { ...apt, status: "completed" };
+              } else if (apt.date === todayStr) {
+                try {
+                  const match = apt.time.match(/^(\d+):(\d+)\s*(AM|PM)$/i);
+                  if (match) {
+                    let hrs = parseInt(match[1]);
+                    const mins = parseInt(match[2]);
+                    const pm = match[3].toUpperCase() === "PM";
+                    if (pm && hrs < 12) hrs += 12;
+                    if (!pm && hrs === 12) hrs = 0;
+                    
+                    const aptTime = new Date();
+                    aptTime.setHours(hrs, mins, 0, 0);
+                    aptTime.setHours(aptTime.getHours() + 1); // 1-hour buffer
+                    
+                    if (now > aptTime) {
+                      changed = true;
+                      return { ...apt, status: "completed" };
+                    }
+                  }
+                } catch {}
+              }
+            }
+            return apt;
+          });
+
+          if (changed) {
+            localStorage.setItem("healflow-appointments", JSON.stringify(updatedApts));
+          }
+          setAppointments(updatedApts);
         } catch {
           setAppointments([]);
         }
@@ -100,11 +140,40 @@ export default function PatientDashboard() {
         try {
           setMedications(JSON.parse(storedMeds));
         } catch {
-          setMedications(DEFAULT_MEDICATIONS);
+          setMedications([]);
         }
       } else {
-        setMedications(DEFAULT_MEDICATIONS);
-        localStorage.setItem("healflow-medications", JSON.stringify(DEFAULT_MEDICATIONS));
+        const profileStr = localStorage.getItem("healflow-patient-profile");
+        let initialMeds = DEFAULT_MEDICATIONS;
+        if (profileStr) {
+          try {
+            const profile = JSON.parse(profileStr);
+            if (profile.medications && profile.medications.length > 0) {
+              initialMeds = profile.medications.map((m: string, idx: number) => ({
+                id: `med-${Date.now()}-${idx}`,
+                name: m,
+                dosage: "As prescribed",
+                timing: ["Morning", "Afternoon", "Evening", "Night"][idx % 4] as any,
+                taken: false
+              }));
+            }
+          } catch {}
+        }
+        setMedications(initialMeds);
+        localStorage.setItem("healflow-medications", JSON.stringify(initialMeds));
+      }
+
+      // 4. Lab Results
+      const storedLabs = localStorage.getItem("healflow-lab-results");
+      if (storedLabs) {
+        try {
+          setLabResults(JSON.parse(storedLabs));
+        } catch {
+          setLabResults(DEFAULT_LAB_RESULTS);
+        }
+      } else {
+        setLabResults(DEFAULT_LAB_RESULTS);
+        localStorage.setItem("healflow-lab-results", JSON.stringify(DEFAULT_LAB_RESULTS));
       }
     }
   }, []);
@@ -173,7 +242,7 @@ export default function PatientDashboard() {
               Welcome back, <span className="serif-italic" style={{ color: "var(--purple-primary)" }}>{patientName.split(" ")[0]}</span>
             </h1>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginTop: "4px" }}>
-              Vitalis Health Systems • Personalized health status & care overview
+              HealFlow AI • Personalized health status & care overview
             </p>
           </div>
           <Link href="/doctors" style={{ background: "var(--purple-primary)", color: "white", padding: "10px 22px", borderRadius: "100px", fontSize: "13px", fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 12px rgba(0,113,227,0.12)" }}>
@@ -221,8 +290,14 @@ export default function PatientDashboard() {
             </div>
             <div>
               <span style={{ fontSize: "11px", fontWeight: 700, textTransform: "uppercase", color: "var(--text-muted)", display: "block" }}>Biomarker Panels</span>
-              <p style={{ fontSize: "14px", fontWeight: 700, margin: "4px 0 0" }}>3 Labs Optimal</p>
-              <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "2px 0 0" }}>Vitamin B12 requires check</p>
+              <p style={{ fontSize: "14px", fontWeight: 700, margin: "4px 0 0" }}>
+                {labResults.filter(r => r.status === "optimal" || r.status === "normal").length} Labs Optimal
+              </p>
+              <p style={{ fontSize: "11px", color: "var(--text-secondary)", margin: "2px 0 0" }}>
+                {labResults.find(r => r.status === "low" || r.status === "high") 
+                  ? `${labResults.find(r => r.status === "low" || r.status === "high")?.name} requires check` 
+                  : "All biomarkers optimal"}
+              </p>
             </div>
           </div>
         </div>
@@ -284,7 +359,7 @@ export default function PatientDashboard() {
               </h3>
 
               <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {DEFAULT_LAB_RESULTS.map((result) => {
+                {labResults.map((result) => {
                   const percentage = Math.min(100, Math.max(0, ((result.value - (result.minRange * 0.5)) / (result.maxRange * 1.2 - (result.minRange * 0.5))) * 100));
                   
                   let color = "var(--severity-low)";
@@ -427,5 +502,3 @@ export default function PatientDashboard() {
     </div>
   );
 }
-
-import { useMemo } from "react";

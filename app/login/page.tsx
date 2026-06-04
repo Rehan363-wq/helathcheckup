@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { isOnboardingCompleted, syncProfileToLocalStorage } from "@/lib/user-profile";
@@ -23,6 +23,10 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sandboxInfo, setSandboxInfo] = useState<string | null>(null);
 
+  useEffect(() => {
+    document.title = "Login — HealFlow AI";
+  }, []);
+
   // Initialize client safely
   let supabase: any = null;
   try {
@@ -30,6 +34,61 @@ export default function LoginPage() {
   } catch (e) {
     console.warn("Supabase client not initialized:", e);
   }
+
+  const resetLocalStorageForSignup = (
+    targetName: string,
+    targetRole: "patient" | "doctor",
+    targetSpec: string,
+    targetDegree: string,
+    targetFees: string
+  ) => {
+    if (typeof window === "undefined") return;
+    
+    localStorage.removeItem("healflow-appointments");
+    localStorage.removeItem("healflow-medications");
+    localStorage.removeItem("healflow-health-profile");
+    
+    if (targetRole === "patient") {
+      const freshPatient = {
+        name: targetName || "Demo Patient",
+        phone: "",
+        age: 25,
+        gender: "male" as const,
+        blood_group: "Don't Know",
+        conditions: [],
+        medications: [],
+        allergies: [],
+        uploaded_reports: [],
+        health_goals: [],
+        language_preference: "hinglish" as const,
+        onboarding_completed: false,
+      };
+      localStorage.setItem("healflow-patient-profile", JSON.stringify(freshPatient));
+      localStorage.removeItem("healflow-doctor-profile");
+    } else {
+      const freshDoctor = {
+        name: targetName || "Dr. Demo Account",
+        phone: "",
+        specialization: targetSpec || "General Physician",
+        degree: targetDegree || "",
+        experience_years: 1,
+        city: "",
+        area: "",
+        fees: Number(targetFees) || 300,
+        preferred_conditions: [],
+        preferred_age_groups: ["All Ages"],
+        consultation_modes: ["chat"],
+        ai_settings: {
+          ai_assisted_replies: true,
+          auto_patient_summary: true,
+          patient_data_access: "full" as const,
+        },
+        onboarding_completed: false,
+      };
+      localStorage.setItem("healflow-doctor-profile", JSON.stringify(freshDoctor));
+      localStorage.removeItem("healflow-patient-profile");
+    }
+  };
 
   const performAuthProcess = async (
     targetEmail: string,
@@ -49,6 +108,10 @@ export default function LoginPage() {
       setError("Please fill out all fields.");
       setLoading(false);
       return;
+    }
+
+    if (isSigningUp) {
+      resetLocalStorageForSignup(targetName, targetRole, targetSpec, targetDegree, targetFees);
     }
 
     const isDemo = targetEmail.includes("demo-") || targetEmail === "patient@healflow.ai" || targetEmail === "doctor@healflow.ai" || targetEmail === "patient@mediscan.ai" || targetEmail === "doctor@mediscan.ai";
@@ -407,7 +470,7 @@ export default function LoginPage() {
             Welcome to HealFlow AI
           </h2>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", opacity: 0.9, marginTop: "4px" }}>
-            Apna Doctor, Apni Zeb Mein
+            Your AI Doctor, Right in Your Pocket
           </p>
         </div>
 

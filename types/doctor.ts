@@ -13,6 +13,7 @@ export interface Doctor {
   lat: number;
   lng: number;
   imageUrl?: string;
+  is_approved?: boolean;
 }
 
 export interface DoctorFilter {

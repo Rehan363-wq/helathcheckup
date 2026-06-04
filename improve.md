@@ -1,30 +1,25 @@
 # HealFlow AI — Product Improvement Backlog (`improve.md`)
 
-This document lists identified bugs, user experience improvements, and technical enhancements needed to elevate HealFlow AI from a hackathon MVP to a robust, enterprise-ready healthcare platform.
+This document lists the completed bugs, visual issues, security upgrades, and architectural enhancements executed to elevate HealFlow AI to a robust, enterprise-ready healthcare platform.
 
 ---
 
-## 🚀 Critical UI/UX & Functional Improvements
+## 🚀 Completed UI/UX & Technical Enhancements
 
 ### 1. One-Click Sandbox Quick Login
-- **Issue**: Clicking "Patient Sandbox" or "Doctor Sandbox" in `/login` fills form fields but doesn't log in. Typing through test runners is difficult.
-- **Fix**: Re-engineer `handleQuickLogin()` to immediately authenticate the demo session and redirect the user, eliminating the extra click.
+- **Fix**: Re-engineered `handleQuickLogin()` inside `/login` to immediately authenticate the demo session and redirect the user.
 
 ### 2. Sandbox Doctor Chat with Real Gemini Responses
-- **Issue**: Sandbox doctor chat replies are hardcoded templates (e.g. general paracetamol advice for fever).
-- **Fix**: Connect sandbox doctor chat with the Gemini API route (`/api/chat/bot` or similar prompt-engineered assistant) so doctors dynamically reply to patient queries based on their specializing domains.
+- **Fix**: Integrated sandbox doctor chats with the Gemini API route (`/api/chat/doctor`) for specializing responses.
 
 ### 3. Real-Time Report Parsing During Onboarding
-- **Issue**: Report upload in step 4 of onboarding only creates mock metadata and doesn't call Gemini to summarize.
-- **Fix**: Send uploaded report files (base64 images/PDFs) to the Gemini vision API immediately during onboarding, extracting key parameters and generating summaries dynamically.
+- **Fix**: Configured immediate visions/reports parsing with the Gemini vision API during step 4 of onboarding.
 
 ### 4. Dynamic Doctor Search with Database Queries
-- **Issue**: Doctor searching on `/doctors` works on local mock lists.
-- **Fix**: Query the Supabase `profiles` table filtering by specialization, fee limits, and city so real registered doctors show up dynamically.
+- **Fix**: Replaced local directories lists with dynamic filters querying Supabase `profiles` tables.
 
 ### 5. Unified Global Theme & Font Styling Polish
-- **Issue**: Font and color styling across sections (tracker, scan, report, chat) can feel disconnected without strict CSS variable enforcement.
-- **Fix**: Enforce the new `Outfit` and `Plus Jakarta Sans` typography globally and polish layout margins for a perfect glassmorphic look.
+- **Fix**: Polished core layout CSS design variables, corrected dark mode report cards to use `rgba` transparencies, and added dynamic browser tab title handlers for all routes.
 
 ---
 
@@ -35,3 +30,8 @@ This document lists identified bugs, user experience improvements, and technical
 - [x] Task 3: Real Gemini-Driven Sandbox Doctor Chat (`app/chat/page.tsx`)
 - [x] Task 4: Dynamic PDF/Image Report Summary extraction in Onboarding (`app/onboarding/page.tsx`)
 - [x] Task 5: Core CSS Design System Refinement & Styling Polish (`app/globals.css`)
+- [x] Task 6: Rebrand all leftover "Vitalis" & "MediScan" to "HealFlow AI"
+- [x] Task 7: Professionalize all Hinglish button labels/headers to English
+- [x] Task 8: Implement dynamic page transitions screen loader (`app/loading.tsx`)
+- [x] Task 9: Secure admin credentials and add authorization session checks to all API routes
+- [x] Task 10: Build a local storage Backup & Recovery manager on `/profile`

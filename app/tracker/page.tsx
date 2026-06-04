@@ -57,6 +57,7 @@ export default function TrackerDashboard() {
   const [simIntervalId, setSimIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
+    document.title = "Mood & Tracks — HealFlow AI";
     const p = loadProfile();
     const l = loadTodayLog();
     setProfile(p);
@@ -107,6 +108,16 @@ export default function TrackerDashboard() {
     } else {
       // Activate sensor
       setIsSensorActive(true);
+
+      const startSimulator = () => {
+        setSimIntervalId((currentInterval) => {
+          if (currentInterval) return currentInterval;
+          return setInterval(() => {
+            updateSteps(12);
+            setSensorDistance((prev) => prev + 9.15);
+          }, 2000);
+        });
+      };
       
       // 1. Geolocation API (for mobile/real movement)
       if (typeof window !== "undefined" && "geolocation" in navigator) {
@@ -130,25 +141,34 @@ export default function TrackerDashboard() {
             });
           },
           (err) => {
-            console.warn("GPS tracking denied/blocked:", err);
+            console.warn("GPS tracking denied/blocked, starting desktop simulator:", err);
+            startSimulator();
           },
           { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
         );
         setWatchId(id);
+      } else {
+        console.warn("Geolocation API not available, starting desktop simulator");
+        startSimulator();
       }
-
-      // 2. Desktop simulator loop (increments 10 steps every 2 seconds for visual verification)
-      const interval = setInterval(() => {
-        updateSteps(12);
-        setSensorDistance((prev) => prev + 9.15); // ≈ 9.15 meters of distance
-      }, 2000);
-      setSimIntervalId(interval);
     }
   };
 
   const handleMoodSelect = (selectedMood: "happy" | "calm" | "neutral" | "stressed" | "anxious") => {
     if (!log) return;
     const updatedLog = { ...log, mood: selectedMood };
+    const computedScore = calculateDailyScore(updatedLog, profile!);
+    updatedLog.daily_score = computedScore;
+    saveDailyLog(updatedLog);
+    setLog(updatedLog);
+    setScore(computedScore);
+  };
+
+  const handleUpdateWater = (amount: number) => {
+    if (!log) return;
+    const currentWater = log.water_glasses || 0;
+    const newWater = Math.max(0, currentWater + amount);
+    const updatedLog = { ...log, water_glasses: newWater };
     const computedScore = calculateDailyScore(updatedLog, profile!);
     updatedLog.daily_score = computedScore;
     saveDailyLog(updatedLog);
@@ -309,8 +329,54 @@ export default function TrackerDashboard() {
               </div>
               <span style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-secondary)" }}>Water consumed</span>
             </div>
-            <p style={{ margin: 0, fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{log.water_glasses}</p>
-            <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>/ 8 glasses</p>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-end" }}>
+              <div>
+                <p style={{ margin: 0, fontSize: "28px", fontWeight: 800, color: "var(--text-primary)", letterSpacing: "-0.02em" }}>{log.water_glasses}</p>
+                <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>/ 8 glasses</p>
+              </div>
+              <div style={{ display: "flex", gap: "8px", marginBottom: "4px" }}>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateWater(-1)}
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    border: "1px solid var(--border)",
+                    background: "var(--bg-surface)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    color: "var(--text-primary)",
+                  }}
+                  className="hover:bg-gray-100 active:scale-95 duration-100"
+                >
+                  -
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleUpdateWater(1)}
+                  style={{
+                    width: "28px",
+                    height: "28px",
+                    borderRadius: "50%",
+                    border: "1px solid var(--border)",
+                    background: "var(--bg-surface)",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                    cursor: "pointer",
+                    fontWeight: "bold",
+                    color: "var(--text-primary)",
+                  }}
+                  className="hover:bg-gray-100 active:scale-95 duration-100"
+                >
+                  +
+                </button>
+              </div>
+            </div>
             <div style={{ marginTop: "12px", height: "6px", borderRadius: "3px", background: "var(--border)", overflow: "hidden" }}>
               <div style={{ height: "100%", width: `${Math.min((log.water_glasses / 8) * 100, 100)}%`, background: "var(--purple-light)", borderRadius: "3px", transition: "width 0.4s" }} />
             </div>

@@ -51,6 +51,10 @@ export interface DoctorProfile {
   onboarding_completed: boolean;
 }
 
+const getLocalDateStr = (d: Date = new Date()): string => {
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+};
+
 // ---------- Constants ----------
 
 export const COMMON_CONDITIONS = [
@@ -293,7 +297,7 @@ export function buildPatientSummaryForDoctor(patientProfile?: PatientProfile): s
   let healthData: Record<string, unknown> = {};
   if (typeof window !== "undefined") {
     try {
-      const todayStr = new Date().toISOString().split("T")[0];
+      const todayStr = getLocalDateStr();
       const logStr = localStorage.getItem(`healflow-health-log-${todayStr}`);
       if (logStr) {
         const log = JSON.parse(logStr);
@@ -348,7 +352,7 @@ export function syncProfileToLocalStorage(role: "patient" | "doctor", dbProfile:
         id: r.id,
         name: r.name,
         type: r.report_type || "lab_report",
-        upload_date: r.created_at ? new Date(r.created_at).toISOString().split("T")[0] : new Date().toISOString().split("T")[0],
+        upload_date: r.created_at ? getLocalDateStr(new Date(r.created_at)) : getLocalDateStr(),
         file_type: r.file_type || "application/pdf",
         summary: r.summary || "",
       })) : [],

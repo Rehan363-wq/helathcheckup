@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Send, User, MessageSquare, ArrowLeft, Heart, Award, CreditCard, Star, Brain, Loader2 } from "lucide-react";
@@ -35,16 +35,11 @@ export default function DoctorDashboardPage() {
   const [aiLoading, setAiLoading] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
-  // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Validate session
   useEffect(() => {
+    document.title = "Doctor Dashboard — HealFlow AI";
     const session = localStorage.getItem("healflow-session");
     if (!session) {
       router.push("/login");
@@ -106,7 +101,7 @@ export default function DoctorDashboardPage() {
     };
 
     loadPatients();
-  }, [currentDoctor]);
+  }, [currentDoctor, supabase]);
 
   // Load messages when selected patient changes
   useEffect(() => {
@@ -180,7 +175,7 @@ export default function DoctorDashboardPage() {
     };
 
     loadMessages();
-  }, [selectedPatient, currentDoctor]);
+  }, [selectedPatient, currentDoctor, supabase]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -469,9 +464,16 @@ export default function DoctorDashboardPage() {
                       setAiLoading(true);
                       setAiSummary(null);
                       try {
+                        const sessionStr = localStorage.getItem("healflow-session");
+                        const session = sessionStr ? JSON.parse(sessionStr) : null;
+                        const token = session?.email || "sandbox";
+
                         const res = await fetch("/api/doctor/assistant", {
                           method: "POST",
-                          headers: { "Content-Type": "application/json" },
+                          headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": `Bearer ${token}`
+                          },
                           body: JSON.stringify({
                             doctorContext: buildDoctorContextForAI(),
                             patientSummary: buildPatientSummaryForDoctor(),

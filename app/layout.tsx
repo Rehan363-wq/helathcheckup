@@ -20,12 +20,12 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "Vitalis Health Systems — Care as it should be",
+  title: "HealFlow AI — Care as it should be",
   description:
     "A premium, Apple-inspired healthcare web application designed to provide a serene, frictionless experience for patients and providers.",
   keywords: [
-    "Vitalis",
-    "Vitalis Health",
+    "HealFlow",
+    "HealFlow Health",
     "Serenity Health",
     "Apple healthcare",
     "premium medical platform",

@@ -73,9 +73,15 @@ export default function Navbar() {
       }
     };
     checkSession();
-    const interval = setInterval(checkSession, 1000);
-    return () => clearInterval(interval);
-  }, []);
+
+    window.addEventListener("storage", checkSession);
+    window.addEventListener("local-session-change", checkSession);
+
+    return () => {
+      window.removeEventListener("storage", checkSession);
+      window.removeEventListener("local-session-change", checkSession);
+    };
+  }, [pathname]);
 
   const handleLogout = () => {
     localStorage.removeItem("healflow-session");
@@ -100,7 +106,7 @@ export default function Navbar() {
       { href: "/doctors", label: "Find Specialists" },
       { href: "/scan", label: "Skin Analyzer" },
       { href: "/report", label: "Report Explainer" },
-      { href: "/health-bot", label: "Vitalis AI Bot" },
+      { href: "/health-bot", label: "HealFlow AI Bot" },
       { href: "/tracker", label: "Mood & Tracks" },
       { href: "/reminders", label: "Reminders" },
     ];
@@ -164,7 +170,7 @@ export default function Navbar() {
             letterSpacing: "-0.03em",
           }}
         >
-          Vitalis
+          HealFlow
         </span>
         <span
           style={{
@@ -178,7 +184,7 @@ export default function Navbar() {
             marginLeft: "2px",
           }}
         >
-          Health
+          AI
         </span>
       </Link>
 
@@ -191,7 +197,7 @@ export default function Navbar() {
             href="tel:112"
             onClick={(e) => {
               e.preventDefault();
-              alert("SIMULATING EMERGENCY CALL: Connecting with Vitalis Emergency Dispatch (Dialing 112)...");
+              alert("SIMULATING EMERGENCY CALL: Connecting with HealFlow Emergency Dispatch (Dialing 112)...");
             }}
             style={{
               background: "var(--severity-high)",
@@ -279,7 +285,8 @@ export default function Navbar() {
           {/* User Account / Login */}
           {user ? (
             <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-              <div
+              <Link
+                href="/profile"
                 style={{
                   display: "flex",
                   alignItems: "center",
@@ -288,7 +295,9 @@ export default function Navbar() {
                   fontSize: "13px",
                   fontWeight: 600,
                   color: "var(--text-primary)",
+                  textDecoration: "none",
                 }}
+                className="hover:underline"
               >
                 <User size={14} style={{ color: "var(--purple-primary)" }} />
                 {user.name.split(" ")[0]}
@@ -305,7 +314,7 @@ export default function Navbar() {
                 >
                   {user.role}
                 </span>
-              </div>
+              </Link>
               <button
                 onClick={handleLogout}
                 style={{
@@ -342,7 +351,7 @@ export default function Navbar() {
                 }}
                 className="hover:scale-105"
               >
-                Access Vitalis
+                Access HealFlow
               </Link>
             )
           )}
@@ -461,7 +470,7 @@ export default function Navbar() {
                   textAlign: "center",
                 }}
               >
-                Access Vitalis
+                Access HealFlow
               </Link>
             )
           )}

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, Suspense } from "react";
+import { useState, useEffect, Suspense, useCallback, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { Bell, Clock, Plus, Trash2, ShieldAlert, CheckCircle, Volume2 } from "lucide-react";
@@ -33,15 +33,11 @@ function RemindersContent() {
   const [activeAlert, setActiveAlert] = useState<{ medicine: string; dosage: string; instruction: string } | null>(null);
 
   // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Prefill medicine name from query param (AI chatbot redirect)
   useEffect(() => {
+    document.title = "Medicine Reminders — HealFlow AI";
     const medParam = searchParams.get("medicine");
     if (medParam) {
       setName(medParam);
@@ -100,7 +96,22 @@ function RemindersContent() {
     };
 
     loadReminders();
-  }, [currentUser]);
+  }, [currentUser, supabase]);
+
+  const triggerAlertNotification = useCallback((reminder: any) => {
+    setActiveAlert({
+      medicine: reminder.name,
+      dosage: reminder.dosage,
+      instruction: reminder.instruction,
+    });
+
+    if ("speechSynthesis" in window) {
+      const text = `Time to take your medicine: ${reminder.name}. ${reminder.dosage}, ${reminder.instruction}.`;
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 0.9;
+      window.speechSynthesis.speak(utterance);
+    }
+  }, []);
 
   // Global Clock / Reminder Checker (Interval runs every 10 seconds)
   useEffect(() => {
@@ -111,7 +122,7 @@ function RemindersContent() {
       const currentHours = String(now.getHours()).padStart(2, "0");
       const currentMinutes = String(now.getMinutes()).padStart(2, "0");
       const currentTimeString = `${currentHours}:${currentMinutes}`;
-      const todayDateString = now.toISOString().split("T")[0];
+      const todayDateString = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
       reminders.forEach((rem) => {
         if (rem.timings.includes(currentTimeString)) {
@@ -127,25 +138,9 @@ function RemindersContent() {
       });
     };
 
-    const triggerAlertNotification = (reminder: MedicineReminder) => {
-      setActiveAlert({
-        medicine: reminder.name,
-        dosage: reminder.dosage,
-        instruction: reminder.instruction,
-      });
-
-      // HTML5 Speech Synthesis read-out (bilingual voice chime)
-      if ("speechSynthesis" in window) {
-        const text = `Reminding you: Time to take your medicine ${reminder.name}, dosage ${reminder.dosage}, ${reminder.instruction}.`;
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        window.speechSynthesis.speak(utterance);
-      }
-    };
-
     const interval = setInterval(checkReminders, 10000);
     return () => clearInterval(interval);
-  }, [reminders]);
+  }, [reminders, triggerAlertNotification]);
 
   const handleAddTiming = () => {
     if (timeInput && !selectedTimings.includes(timeInput)) {
@@ -240,21 +235,6 @@ function RemindersContent() {
     });
   };
 
-  const triggerAlertNotification = (reminder: any) => {
-    setActiveAlert({
-      medicine: reminder.name,
-      dosage: reminder.dosage,
-      instruction: reminder.instruction,
-    });
-
-    if ("speechSynthesis" in window) {
-      const text = `Time to take your medicine: ${reminder.name}. ${reminder.dosage}, ${reminder.instruction}.`;
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 0.9;
-      window.speechSynthesis.speak(utterance);
-    }
-  };
-
   return (
     <div
       style={{
@@ -308,10 +288,10 @@ function RemindersContent() {
             </div>
 
             <h3 style={{ fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 700, color: "var(--text-primary)", marginBottom: "4px" }}>
-              Medicine Ka Time!
+              Medication Alert!
             </h3>
             <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", color: "var(--text-secondary)", marginBottom: "20px" }}>
-              Aapki scheduled medicine lene ka time ho gaya hai.
+              It's time to take your scheduled medication.
             </p>
 
             <div
@@ -353,7 +333,7 @@ function RemindersContent() {
                 cursor: "pointer",
               }}
             >
-              Done, Khali Maine!
+              Done, I took it!
             </button>
           </div>
         </div>
@@ -376,7 +356,7 @@ function RemindersContent() {
               ⏰ Medicine Reminders
             </h1>
             <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", color: "var(--text-secondary)" }}>
-              Apni medicines scheduling karo — timely trigger calls aur notifications payein
+              Schedule your daily medications and receive timely alerts and notifications.
             </p>
             {dbStatus && (
               <span style={{ fontSize: "10px", color: "var(--text-secondary)", marginTop: "4px", display: "block" }}>
@@ -478,10 +458,10 @@ function RemindersContent() {
                     cursor: "pointer",
                   }}
                 >
-                  <option value="After Food">After Food (Khane Ke Baad)</option>
-                  <option value="Before Food">Before Food (Khali Pet)</option>
-                  <option value="With Milk">With Milk (Doodh Ke Saath)</option>
-                  <option value="Before Sleep">Before Sleep (Sone Se Pehle)</option>
+                  <option value="After Food">After Food</option>
+                  <option value="Before Food">Before Food</option>
+                  <option value="With Milk">With Milk</option>
+                  <option value="Before Sleep">Before Sleep</option>
                 </select>
               </div>
             </div>
@@ -630,9 +610,9 @@ function RemindersContent() {
               >
                 <Bell size={36} style={{ color: "var(--text-muted)", margin: "0 auto 12px", opacity: 0.6 }} />
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "14px" }}>
-                  Koi active reminders nahi hain.
+                  No active reminders.
                   <br />
-                  Medicines add karke schedule karein.
+                  Add medicines using the form to schedule alerts.
                 </p>
               </div>
             ) : (

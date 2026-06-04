@@ -1,11 +1,15 @@
 import { GoogleGenerativeAI } from "@google/generative-ai";
 import { NextRequest } from "next/server";
+import { validateApiRequest } from "@/lib/api-auth";
 
 const genAI = new GoogleGenerativeAI(process.env.GOOGLE_GEMINI_API_KEY || "");
 const MODEL_NAME = "gemini-2.5-flash";
 
 export async function POST(request: NextRequest) {
   try {
+    if (!validateApiRequest(request)) {
+      return Response.json({ error: "Unauthorized access" }, { status: 401 });
+    }
     const body = await request.json();
     const { messages, doctorProfile, patientProfile } = body;
 

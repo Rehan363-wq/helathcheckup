@@ -68,9 +68,16 @@ export default function HealthCoachChat() {
         content: m.content,
       }));
 
+      const sessionStr = localStorage.getItem("healflow-session");
+      const session = sessionStr ? JSON.parse(sessionStr) : null;
+      const token = session?.email || "sandbox";
+
       const res = await fetch("/api/tracker/coach", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: { 
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
         body: JSON.stringify({ healthData, messages: recentHistory }),
       });
 
@@ -146,7 +153,7 @@ export default function HealthCoachChat() {
         </div>
         <div>
           <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "18px", fontWeight: 700, margin: 0 }}>
-            MediScan Health Coach
+            HealFlow Health Coach
           </h1>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", opacity: 0.85, margin: 0, display: "flex", alignItems: "center", gap: "4px" }}>
             <Sparkles size={12} /> Gemini 2.5 Flash • Hinglish Health Insights

@@ -14,10 +14,10 @@ export default function HistoryPage() {
   const formatDate = (dateStr: string) => {
     const d = new Date(dateStr + "T00:00:00");
     const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
+    const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, "0")}-${String(today.getDate()).padStart(2, "0")}`;
     const yesterday = new Date(today);
     yesterday.setDate(yesterday.getDate() - 1);
-    const yesterdayStr = yesterday.toISOString().split("T")[0];
+    const yesterdayStr = `${yesterday.getFullYear()}-${String(yesterday.getMonth() + 1).padStart(2, "0")}-${String(yesterday.getDate()).padStart(2, "0")}`;
 
     if (dateStr === todayStr) return "Today";
     if (dateStr === yesterdayStr) return "Yesterday";

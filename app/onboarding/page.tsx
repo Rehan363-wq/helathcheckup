@@ -42,6 +42,7 @@ export default function OnboardingPage() {
   }
 
   useEffect(() => {
+    document.title = "Patient Onboarding — HealFlow AI";
     const session = localStorage.getItem("healflow-session");
     if (session) {
       const parsed = JSON.parse(session);
@@ -137,15 +138,15 @@ export default function OnboardingPage() {
     if (step === 1) {
       if (role === "patient") {
         if (!patient.name.trim()) {
-          setError("Aapka naam likhna zaroori hai (Name is required).");
+          setError("Name is required.");
           return;
         }
         if (!patient.phone.trim()) {
-          setError("Mobile number likhna zaroori hai (Phone is required).");
+          setError("Phone number is required.");
           return;
         }
         if (!patient.age || patient.age <= 0) {
-          setError("Kripya sahi umar bharein (Please enter a valid age).");
+          setError("Please enter a valid age.");
           return;
         }
       } else {
@@ -185,7 +186,20 @@ export default function OnboardingPage() {
   };
 
   const handleComplete = async () => {
-    // 1. Mark onboarding completed in local profiles
+    // 1. Update session in localStorage first so credentials are ready
+    const sessionStr = localStorage.getItem("healflow-session");
+    let userId = "";
+    let userEmail = "";
+    if (sessionStr) {
+      const parsed = JSON.parse(sessionStr);
+      parsed.onboarding_completed = true;
+      parsed.name = role === "patient" ? patient.name : doctor.name;
+      localStorage.setItem("healflow-session", JSON.stringify(parsed));
+      userId = parsed.id || "";
+      userEmail = parsed.email || "";
+    }
+
+    // 2. Mark onboarding completed in local profiles
     const finalPatient = { ...patient, onboarding_completed: true };
     const finalDoctor = { ...doctor, onboarding_completed: true };
 
@@ -193,17 +207,32 @@ export default function OnboardingPage() {
       savePatientProfile(finalPatient);
     } else {
       saveDoctorProfile(finalDoctor);
-    }
-
-    // 2. Update session in localStorage
-    const sessionStr = localStorage.getItem("healflow-session");
-    let userId = "";
-    if (sessionStr) {
-      const parsed = JSON.parse(sessionStr);
-      parsed.onboarding_completed = true;
-      parsed.name = role === "patient" ? finalPatient.name : finalDoctor.name;
-      localStorage.setItem("healflow-session", JSON.stringify(parsed));
-      userId = parsed.id || "";
+      try {
+        const storedDocs = localStorage.getItem("healflow-doctors-list");
+        const docs = storedDocs ? JSON.parse(storedDocs) : [];
+        const email = userEmail || `doc-${Date.now()}@healflow.ai`;
+        const id = userId || `doc-${Date.now()}`;
+        
+        if (!docs.some((d: any) => d.id === id || d.email === email)) {
+          docs.push({
+            id: id,
+            email: email,
+            name: finalDoctor.name,
+            specialization: finalDoctor.specialization,
+            degree: finalDoctor.degree,
+            fees: finalDoctor.fees,
+            city: finalDoctor.city,
+            area: finalDoctor.area,
+            rating: 4.5,
+            distance: 1.5,
+            phone: finalDoctor.phone,
+            is_approved: false,
+          });
+          localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+        }
+      } catch (e) {
+        console.warn("Failed to sync new doctor to directory list:", e);
+      }
     }
 
     // 3. Sync to Supabase
@@ -389,7 +418,7 @@ export default function OnboardingPage() {
                   Welcome to HealFlow AI!
                 </h4>
                 <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
-                  Kripya apni details bharein taaki AI aapki health reports aur questions ko sahi se samajh sake.
+                  Please enter your details so the AI can understand your health reports and questions accurately.
                 </p>
               </div>
             </div>
@@ -399,18 +428,18 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Basic Information</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Humein aapke baare mein batayein</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Tell us a bit about yourself</p>
               </div>
             </div>
 
             <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
               <div>
                 <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Full Name</label>
-                <input value={patient.name} onChange={e => setPatient({ ...patient, name: e.target.value })} placeholder="Aapka naam" style={inputStyle} />
+                <input value={patient.name} onChange={e => setPatient({ ...patient, name: e.target.value })} placeholder="Your name" style={inputStyle} />
               </div>
               <div>
                 <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Phone Number</label>
-                <input value={patient.phone} onChange={e => setPatient({ ...patient, phone: e.target.value })} placeholder="Aapka mobile number (e.g. +91 9876543210)" style={inputStyle} />
+                <input value={patient.phone} onChange={e => setPatient({ ...patient, phone: e.target.value })} placeholder="Your mobile number (e.g. +91 9876543210)" style={inputStyle} />
               </div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
@@ -450,7 +479,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Health Conditions</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Kya aapko koi existing bimari hai?</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Do you have any existing health conditions?</p>
               </div>
             </div>
 
@@ -479,7 +508,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Medications & Allergies</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Kya dawai le rahe hain? Koi allergy?</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Are you currently taking any medications or have allergies?</p>
               </div>
             </div>
 
@@ -531,7 +560,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Upload Reports</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Apni medical reports ya prescriptions upload karein</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Upload your medical reports or prescriptions</p>
               </div>
             </div>
 
@@ -576,9 +605,16 @@ export default function OnboardingPage() {
                         reader.readAsDataURL(file);
                       });
 
+                      const sessionStr = localStorage.getItem("healflow-session");
+                      const sessionObj = sessionStr ? JSON.parse(sessionStr) : null;
+                      const token = sessionObj?.email || "sandbox";
+
                       const response = await fetch("/api/analyze/report", {
                         method: "POST",
-                        headers: { "Content-Type": "application/json" },
+                        headers: { 
+                          "Content-Type": "application/json",
+                          "Authorization": `Bearer ${token}`
+                        },
                         body: JSON.stringify({
                           imageBase64: base64,
                           mimeType: file.type,
@@ -641,7 +677,7 @@ export default function OnboardingPage() {
             )}
 
             <p style={{ marginTop: "16px", fontSize: "11px", color: "var(--text-muted)", textAlign: "center" }}>
-              🔒 Aapka data safe hai — sirf AI analysis ke liye use hoga. Skip bhi kar sakte hain.
+              🔒 Your data is secure and used strictly for personalized AI analysis. You can also skip this step.
             </p>
           </div>
         )}
@@ -654,7 +690,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Health Goals</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Aap kya achieve karna chahte hain?</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>What would you like to achieve?</p>
               </div>
             </div>
 
@@ -712,7 +748,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Practice Details</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Apni practice ke baare mein batayein</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Tell us about your medical practice</p>
               </div>
             </div>
 
@@ -720,7 +756,7 @@ export default function OnboardingPage() {
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "12px" }}>
                 <div>
                   <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Full Name</label>
-                  <input value={doctor.name} onChange={e => setDoctor({ ...doctor, name: e.target.value })} placeholder="Dr. Aapka naam" style={inputStyle} />
+                  <input value={doctor.name} onChange={e => setDoctor({ ...doctor, name: e.target.value })} placeholder="Dr. Your Name" style={inputStyle} />
                 </div>
                 <div>
                   <label style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-secondary)", display: "block", marginBottom: "6px" }}>Phone Number</label>
@@ -773,7 +809,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>Patient Preferences</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>Kaise patients dekhna chahte hain?</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>What patients do you prefer to see?</p>
               </div>
             </div>
 
@@ -811,7 +847,7 @@ export default function OnboardingPage() {
               </div>
               <div>
                 <h2 style={{ margin: 0, fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", fontFamily: "var(--font-heading)" }}>AI Assistant Settings</h2>
-                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>AI ko kaise use karna chahte hain?</p>
+                <p style={{ margin: 0, fontSize: "13px", color: "var(--text-secondary)" }}>How would you like to use the AI Assistant?</p>
               </div>
             </div>
 
@@ -820,7 +856,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderRadius: "14px", border: "1px solid var(--border)", background: "var(--bg-card)" }}>
                 <div>
                   <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>🤖 AI-Assisted Replies</p>
-                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>AI patient ke symptoms analyze karke suggestions dega</p>
+                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>AI will analyze patient symptoms and suggest clinical replies</p>
                 </div>
                 <button onClick={() => setDoctor({ ...doctor, ai_settings: { ...doctor.ai_settings, ai_assisted_replies: !doctor.ai_settings.ai_assisted_replies } })} style={{
                   width: "48px", height: "28px", borderRadius: "14px", border: "none", cursor: "pointer",
@@ -839,7 +875,7 @@ export default function OnboardingPage() {
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", padding: "16px 20px", borderRadius: "14px", border: "1px solid var(--border)", background: "var(--bg-card)" }}>
                 <div>
                   <p style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>📋 Auto Patient Summary</p>
-                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>Consultation se pehle patient ka AI summary dikhega</p>
+                  <p style={{ margin: "2px 0 0", fontSize: "11px", color: "var(--text-secondary)" }}>Generates a patient overview prior to starting consultations</p>
                 </div>
                 <button onClick={() => setDoctor({ ...doctor, ai_settings: { ...doctor.ai_settings, auto_patient_summary: !doctor.ai_settings.auto_patient_summary } })} style={{
                   width: "48px", height: "28px", borderRadius: "14px", border: "none", cursor: "pointer",
@@ -913,7 +949,7 @@ export default function OnboardingPage() {
       {/* Security Note */}
       <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "24px", fontSize: "11px", color: "var(--text-muted)" }}>
         <Shield size={12} />
-        <span>Aapka data encrypted hai aur sirf AI personalization ke liye use hota hai</span>
+        <span>Your data is fully encrypted and used solely for AI personalization.</span>
       </div>
     </div>
   );

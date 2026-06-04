@@ -20,16 +20,11 @@ function DoctorsListContent() {
   const [doctors, setDoctors] = useState<Doctor[]>(MOCK_DOCTORS);
   const [loading, setLoading] = useState(true);
 
-  // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Update searchQuery state if initialSearch changes
   useEffect(() => {
+    document.title = "Find Specialists — HealFlow AI";
     if (initialSearch) {
       setSearchQuery(initialSearch);
     }
@@ -98,9 +93,17 @@ function DoctorsListContent() {
                       1.5 + (index * 0.7) % 5.0,
             imageUrl: d.avatar_url || undefined,
           }));
-          setDoctors(mappedDoctors);
+
+          const combined = [...mappedDoctors];
+          localDocs.forEach((ld) => {
+            if (ld.is_approved && !combined.some((cd) => cd.name === ld.name || cd.id === ld.id)) {
+              combined.push(ld);
+            }
+          });
+          setDoctors(combined);
         } else {
-          setDoctors([]);
+          const approvedLocal = localDocs.filter((d: any) => d.is_approved === true);
+          setDoctors(approvedLocal);
         }
       } catch (err) {
         console.warn("Failed to fetch doctors from database, using local storage list fallback:", err);
@@ -111,7 +114,7 @@ function DoctorsListContent() {
       }
     }
     fetchDoctors();
-  }, []);
+  }, [supabase]);
 
   const specializations = useMemo(() => getUniqueSpecializations(doctors), [doctors]);
 
@@ -155,7 +158,7 @@ function DoctorsListContent() {
               color: "var(--text-secondary)",
             }}
           >
-            Locate and book certified Vitalis practitioners. Filter by location, cost, or expertise.
+            Locate and book certified HealFlow practitioners. Filter by location, cost, or expertise.
           </p>
         </div>
 
@@ -464,7 +467,7 @@ function DoctorsListContent() {
                   boxShadow: "var(--shadow-card)",
                 }}
               >
-                📍 Vitalis Maps • Click pins to details
+                📍 HealFlow Maps • Click pins to details
               </div>
             </div>
           </div>

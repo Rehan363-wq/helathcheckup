@@ -20,11 +20,32 @@ import { Doctor } from "@/types/doctor";
 import { MOCK_DOCTORS } from "@/lib/doctors";
 import { createClient } from "@/lib/supabase/client";
 
-const MOCK_REVIEWS = [
-  { id: "rev-1", author: "Rohan Malhotra", rating: 5, date: "2 days ago", text: "Dr. Priya was extremely patient and detailed. She explained the diagnosis clearly and laid out a very easy-to-follow treatment plan." },
-  { id: "rev-2", author: "Ananya Sen", rating: 4, date: "1 week ago", text: "Very smooth scheduling experience. The clinic was tidy and sterile. Highly professional consultation!" },
-  { id: "rev-3", author: "Kabir Mehta", rating: 5, date: "3 weeks ago", text: "Great consultation fees and direct answers. My dermatological symptoms have completely disappeared after 4 days." }
-];
+const getDoctorReviews = (doctorName: string, specialization: string) => {
+  const lastName = doctorName ? doctorName.split(" ").slice(1).join(" ") : "Doctor";
+  return [
+    { 
+      id: "rev-1", 
+      author: "Rohan Malhotra", 
+      rating: 5, 
+      date: "2 days ago", 
+      text: `Dr. ${lastName} was extremely patient and detailed. They explained the diagnosis clearly and laid out a very easy-to-follow treatment plan.` 
+    },
+    { 
+      id: "rev-2", 
+      author: "Ananya Sen", 
+      rating: 4, 
+      date: "1 week ago", 
+      text: `Very smooth scheduling experience with Dr. ${lastName}. The clinic was tidy and sterile. Highly professional consultation for ${specialization.toLowerCase()} concerns!` 
+    },
+    { 
+      id: "rev-3", 
+      author: "Kabir Mehta", 
+      rating: 5, 
+      date: "3 weeks ago", 
+      text: `Great consultation fees and direct answers. My symptoms have completely improved following the visit.` 
+    }
+  ];
+};
 
 export default function DoctorProfilePage() {
   const params = useParams();
@@ -43,13 +64,7 @@ export default function DoctorProfilePage() {
   const [bookingConfirmed, setBookingConfirmed] = useState(false);
   const [bookingError, setBookingError] = useState("");
 
-  // Initialize client safely
-  let supabase: any = null;
-  try {
-    supabase = createClient();
-  } catch (e) {
-    console.warn("Supabase client not initialized:", e);
-  }
+  const supabase = useMemo(() => createClient(), []);
 
   // Generate next 4 calendar days (excluding Sundays) for scheduling
   const availableDates = useMemo(() => {
@@ -126,13 +141,13 @@ export default function DoctorProfilePage() {
             area: data.area || "Unknown Area",
             city: data.city || "Unknown City",
             fees: Number(data.fees) || 200,
-            rating: 4.6,
-            distance: 2.1,
+            rating: Number(data.rating) || 4.6,
+            distance: Number(data.distance) || 2.1,
             phone: data.phone || "+91 99999 99999",
             verified: true,
             imageUrl: data.avatar_url || undefined,
-            lat: 28.56,
-            lng: 77.22,
+            lat: Number(data.lat) || 28.56,
+            lng: Number(data.lng) || 77.22,
           };
           setDoctor(mappedDoc);
         }
@@ -143,7 +158,7 @@ export default function DoctorProfilePage() {
       }
     }
     loadDoctor();
-  }, [docId]);
+  }, [docId, supabase]);
 
   // Autofill patient details from session if logged in
   useEffect(() => {
@@ -330,7 +345,7 @@ export default function DoctorProfilePage() {
               <div>
                 <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "16px", letterSpacing: "-0.01em" }}>Patient Feedback</h3>
                 <div style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
-                  {MOCK_REVIEWS.map((rev) => (
+                  {getDoctorReviews(doctor.name, doctor.specialization).map((rev) => (
                     <div key={rev.id} style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "20px", boxShadow: "var(--shadow-card)" }}>
                       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "8px" }}>
                         <span style={{ fontSize: "13px", fontWeight: 700 }}>{rev.author}</span>
