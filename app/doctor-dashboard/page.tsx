@@ -396,6 +396,7 @@ export default function DoctorDashboardPage() {
             display: "grid",
             gridTemplateColumns: "320px 1fr",
             gap: "20px",
+            height: "calc(100vh - 280px)",
           }}
           className="chat-container-layout"
         >
@@ -743,6 +744,8 @@ export default function DoctorDashboardPage() {
           .chat-container-layout {
             display: flex !important;
             flex-direction: column !important;
+            height: auto !important;
+            min-height: calc(100vh - 120px) !important;
           }
           .left-sidebar {
             width: 100% !important;

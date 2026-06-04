@@ -54,9 +54,11 @@ export default function ChatPage() {
 
   // Load doctors list
   useEffect(() => {
+    let active = true;
+
     const loadDoctors = async () => {
-      if (!supabase) {
-        useFallbackDoctors();
+      if (!supabase || currentUser?.isSandbox) {
+        if (active) useFallbackDoctors();
         return;
       }
 
@@ -68,15 +70,17 @@ export default function ChatPage() {
 
         if (error) throw error;
 
-        if (data && data.length > 0) {
-          setDoctors(data);
-          setDbStatus("Connected to Supabase DB");
-        } else {
-          useFallbackDoctors();
+        if (active) {
+          if (data && data.length > 0) {
+            setDoctors(data);
+            setDbStatus("Connected to Supabase DB");
+          } else {
+            useFallbackDoctors();
+          }
         }
       } catch (err) {
         console.warn("Supabase profiles load failed, fallback to mock data:", err);
-        useFallbackDoctors();
+        if (active) useFallbackDoctors();
       }
     };
 
@@ -103,7 +107,11 @@ export default function ChatPage() {
     };
 
     loadDoctors();
-  }, [supabase]);
+
+    return () => {
+      active = false;
+    };
+  }, [supabase, currentUser]);
 
   // Load messages when selected doctor changes
   useEffect(() => {
@@ -282,7 +290,7 @@ export default function ChatPage() {
   return (
     <div
       style={{
-        minHeight: "calc(100vh - 64px)",
+        height: "calc(100vh - 112px)",
         background: "var(--bg-surface)",
         display: "flex",
         padding: "24px",
@@ -563,6 +571,8 @@ export default function ChatPage() {
           .chat-container-layout {
             flex-direction: column !important;
             padding: 12px !important;
+            height: auto !important;
+            min-height: calc(100vh - 64px) !important;
           }
           .left-sidebar {
             width: 100% !important;
