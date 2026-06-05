@@ -16,7 +16,7 @@ export default function ScanPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Skin Analyzer — HealFlow AI";
+    document.title = "Skin Analyzer — CliniHome AI";
   }, []);
 
   const handleFileSelect = async (file: File) => {
@@ -32,7 +32,7 @@ export default function ScanPage() {
     let patientId = null;
     let token = "sandbox";
     try {
-      const sessionStr = localStorage.getItem("healflow-session");
+      const sessionStr = localStorage.getItem("clinihome-session");
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
         patientId = session.id || null;
@@ -209,7 +209,7 @@ export default function ScanPage() {
                         let patientId = null;
                         let token = "sandbox";
                         try {
-                          const sessionStr = localStorage.getItem("healflow-session");
+                          const sessionStr = localStorage.getItem("clinihome-session");
                           if (sessionStr) {
                             const session = JSON.parse(sessionStr);
                             patientId = session.id || null;

@@ -42,8 +42,8 @@ export default function OnboardingPage() {
   }
 
   useEffect(() => {
-    document.title = "Patient Onboarding — HealFlow AI";
-    const session = localStorage.getItem("healflow-session");
+    document.title = "Patient Onboarding — CliniHome AI";
+    const session = localStorage.getItem("clinihome-session");
     if (session) {
       const parsed = JSON.parse(session);
       setRole(parsed.role || "patient");
@@ -187,14 +187,14 @@ export default function OnboardingPage() {
 
   const handleComplete = async () => {
     // 1. Update session in localStorage first so credentials are ready
-    const sessionStr = localStorage.getItem("healflow-session");
+    const sessionStr = localStorage.getItem("clinihome-session");
     let userId = "";
     let userEmail = "";
     if (sessionStr) {
       const parsed = JSON.parse(sessionStr);
       parsed.onboarding_completed = true;
       parsed.name = role === "patient" ? patient.name : doctor.name;
-      localStorage.setItem("healflow-session", JSON.stringify(parsed));
+      localStorage.setItem("clinihome-session", JSON.stringify(parsed));
       userId = parsed.id || "";
       userEmail = parsed.email || "";
     }
@@ -208,9 +208,9 @@ export default function OnboardingPage() {
     } else {
       saveDoctorProfile(finalDoctor);
       try {
-        const storedDocs = localStorage.getItem("healflow-doctors-list");
+        const storedDocs = localStorage.getItem("clinihome-doctors-list");
         const docs = storedDocs ? JSON.parse(storedDocs) : [];
-        const email = userEmail || `doc-${Date.now()}@healflow.ai`;
+        const email = userEmail || `doc-${Date.now()}@clinihome.ai`;
         const id = userId || `doc-${Date.now()}`;
         
         if (!docs.some((d: any) => d.id === id || d.email === email)) {
@@ -228,7 +228,7 @@ export default function OnboardingPage() {
             phone: finalDoctor.phone,
             is_approved: false,
           });
-          localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+          localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
         }
       } catch (e) {
         console.warn("Failed to sync new doctor to directory list:", e);
@@ -415,7 +415,7 @@ export default function OnboardingPage() {
               <div style={{ fontSize: "28px" }}>👋</div>
               <div>
                 <h4 style={{ margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--text-primary)" }}>
-                  Welcome to HealFlow AI!
+                  Welcome to CliniHome AI!
                 </h4>
                 <p style={{ margin: "2px 0 0", fontSize: "12px", color: "var(--text-secondary)", lineHeight: 1.4 }}>
                   Please enter your details so the AI can understand your health reports and questions accurately.
@@ -605,7 +605,7 @@ export default function OnboardingPage() {
                         reader.readAsDataURL(file);
                       });
 
-                      const sessionStr = localStorage.getItem("healflow-session");
+                      const sessionStr = localStorage.getItem("clinihome-session");
                       const sessionObj = sessionStr ? JSON.parse(sessionStr) : null;
                       const token = sessionObj?.email || "sandbox";
 

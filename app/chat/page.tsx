@@ -38,8 +38,8 @@ export default function ChatPage() {
 
   // Check login session
   useEffect(() => {
-    document.title = "Consultation Chat — HealFlow AI";
-    const session = localStorage.getItem("healflow-session");
+    document.title = "Consultation Chat — CliniHome AI";
+    const session = localStorage.getItem("clinihome-session");
     if (!session) {
       router.push("/login");
       return;
@@ -87,7 +87,7 @@ export default function ChatPage() {
     const useFallbackDoctors = () => {
       let localDocs = [];
       try {
-        const stored = localStorage.getItem("healflow-doctors-list");
+        const stored = localStorage.getItem("clinihome-doctors-list");
         if (stored) {
           localDocs = JSON.parse(stored);
         } else {
@@ -118,7 +118,7 @@ export default function ChatPage() {
     if (!selectedDoctor || !currentUser) return;
     
     let activeChannel: any = null;
-    const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
+    const mockKey = `clinihome-chat-${currentUser.email}-${selectedDoctor.id}`;
 
     const loadMockHistory = () => {
       const saved = localStorage.getItem(mockKey);
@@ -258,14 +258,14 @@ export default function ChatPage() {
     }
 
     // Save locally
-    const mockKey = `healflow-chat-${currentUser.email}-${selectedDoctor.id}`;
+    const mockKey = `clinihome-chat-${currentUser.email}-${selectedDoctor.id}`;
     const localHistory = [...messages, newMsg];
     localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
     // Update patient registry for sandbox doctor dashboard queue
     if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
       try {
-        const registryKey = `healflow-sandbox-patients-${selectedDoctor.id}`;
+        const registryKey = `clinihome-sandbox-patients-${selectedDoctor.id}`;
         const registry = JSON.parse(localStorage.getItem(registryKey) || "[]");
         const existingIdx = registry.findIndex((p: any) => p.email === currentUser.email);
         const entry = {

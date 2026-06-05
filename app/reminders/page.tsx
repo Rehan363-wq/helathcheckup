@@ -37,7 +37,7 @@ function RemindersContent() {
 
   // Prefill medicine name from query param (AI chatbot redirect)
   useEffect(() => {
-    document.title = "Medicine Reminders — HealFlow AI";
+    document.title = "Medicine Reminders — CliniHome AI";
     const medParam = searchParams.get("medicine");
     if (medParam) {
       setName(medParam);
@@ -46,7 +46,7 @@ function RemindersContent() {
 
   // Validate session
   useEffect(() => {
-    const session = localStorage.getItem("healflow-session");
+    const session = localStorage.getItem("clinihome-session");
     if (!session) {
       router.push("/login");
       return;
@@ -81,7 +81,7 @@ function RemindersContent() {
     };
 
     const useFallbackReminders = () => {
-      const saved = localStorage.getItem(`healflow-reminders-${currentUser.email}`);
+      const saved = localStorage.getItem(`clinihome-reminders-${currentUser.email}`);
       if (saved) {
         setReminders(JSON.parse(saved));
       } else {
@@ -90,7 +90,7 @@ function RemindersContent() {
           { id: "r2", name: "Vitamin C", dosage: "1 Tablet", instruction: "Before Food", timings: ["10:00"] },
         ];
         setReminders(defaultReminders);
-        localStorage.setItem(`healflow-reminders-${currentUser.email}`, JSON.stringify(defaultReminders));
+        localStorage.setItem(`clinihome-reminders-${currentUser.email}`, JSON.stringify(defaultReminders));
       }
       setDbStatus("Sandbox Mode: Saving Reminders Locally");
     };
@@ -196,7 +196,7 @@ function RemindersContent() {
 
     // Persist to local cache
     if (currentUser) {
-      localStorage.setItem(`healflow-reminders-${currentUser.email}`, JSON.stringify(updatedReminders));
+      localStorage.setItem(`clinihome-reminders-${currentUser.email}`, JSON.stringify(updatedReminders));
     }
 
     setSuccess(`Reminder set for ${name}!`);
@@ -220,7 +220,7 @@ function RemindersContent() {
     }
 
     if (currentUser) {
-      localStorage.setItem(`healflow-reminders-${currentUser.email}`, JSON.stringify(updated));
+      localStorage.setItem(`clinihome-reminders-${currentUser.email}`, JSON.stringify(updated));
     }
   };
 

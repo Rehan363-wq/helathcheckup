@@ -18,7 +18,7 @@ export default function HealthBotPage() {
     {
       id: "initial",
       role: "assistant",
-      content: "Hello! I am HealFlow AI Health Bot. What health concerns do you have, or which medication details would you like to check? Feel free to describe them.",
+      content: "Hello! I am CliniHome AI Health Bot. What health concerns do you have, or which medication details would you like to check? Feel free to describe them.",
     },
   ]);
   const [input, setInput] = useState("");
@@ -33,7 +33,7 @@ export default function HealthBotPage() {
   ];
 
   useEffect(() => {
-    document.title = "AI Health Bot — HealFlow AI";
+    document.title = "AI Health Bot — CliniHome AI";
   }, []);
 
   useEffect(() => {
@@ -59,7 +59,7 @@ export default function HealthBotPage() {
         content: m.content,
       }));
 
-      const sessionStr = localStorage.getItem("healflow-session");
+      const sessionStr = localStorage.getItem("clinihome-session");
       const session = sessionStr ? JSON.parse(sessionStr) : null;
       const token = session?.email || "sandbox";
 
@@ -158,7 +158,7 @@ export default function HealthBotPage() {
                 margin: 0,
               }}
             >
-              HealFlow Health Assistant
+              CliniHome Health Assistant
             </h1>
             <p
               style={{

@@ -1,5 +1,5 @@
 -- ============================================================
--- HEALFLOW AI UNIFIED SUPABASE SQL SCHEMA
+-- CLINIHOME AI UNIFIED SUPABASE SQL SCHEMA
 -- Copy and run this in your Supabase Dashboard > SQL Editor
 -- ============================================================
 
@@ -190,10 +190,10 @@ CREATE EXTENSION IF NOT EXISTS pgcrypto;
 -- Note: Trigger handle_new_user automatically creates matching public.profiles rows when these are inserted!
 INSERT INTO auth.users (id, instance_id, email, encrypted_password, email_confirmed_at, raw_user_meta_data, aud, role)
 VALUES
-  ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000000', 'priya@healflow.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Priya Sharma","role":"doctor","specialization":"Dermatologist","degree":"MBBS, MD (Dermatology)","fees":300}', 'authenticated', 'authenticated'),
-  ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'rajesh@healflow.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Rajesh Gupta","role":"doctor","specialization":"General Physician","degree":"MBBS, MD (Medicine)","fees":200}', 'authenticated', 'authenticated'),
-  ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'anita@healflow.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Anita Verma","role":"doctor","specialization":"Dermatologist","degree":"MBBS, DVD","fees":500}', 'authenticated', 'authenticated'),
-  ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'amit@healflow.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Amit Patel","role":"doctor","specialization":"General Physician","degree":"MBBS","fees":150}', 'authenticated', 'authenticated')
+  ('11111111-1111-1111-1111-111111111111', '00000000-0000-0000-0000-000000000000', 'priya@clinihome.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Priya Sharma","role":"doctor","specialization":"Dermatologist","degree":"MBBS, MD (Dermatology)","fees":300}', 'authenticated', 'authenticated'),
+  ('22222222-2222-2222-2222-222222222222', '00000000-0000-0000-0000-000000000000', 'rajesh@clinihome.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Rajesh Gupta","role":"doctor","specialization":"General Physician","degree":"MBBS, MD (Medicine)","fees":200}', 'authenticated', 'authenticated'),
+  ('33333333-3333-3333-3333-333333333333', '00000000-0000-0000-0000-000000000000', 'anita@clinihome.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Anita Verma","role":"doctor","specialization":"Dermatologist","degree":"MBBS, DVD","fees":500}', 'authenticated', 'authenticated'),
+  ('44444444-4444-4444-4444-444444444444', '00000000-0000-0000-0000-000000000000', 'amit@clinihome.ai', crypt('password123', gen_salt('bf')), now(), '{"full_name":"Dr. Amit Patel","role":"doctor","specialization":"General Physician","degree":"MBBS","fees":150}', 'authenticated', 'authenticated')
 ON CONFLICT (id) DO NOTHING;
 
 -- Now update the location and details for each created doctor profile

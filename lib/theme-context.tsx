@@ -17,7 +17,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     // Read persisted theme or system default
-    const savedTheme = localStorage.getItem("healflow-theme") as Theme | null;
+    const savedTheme = localStorage.getItem("clinihome-theme") as Theme | null;
     if (savedTheme) {
       setTheme(savedTheme);
     } else {
@@ -39,7 +39,7 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
       root.classList.remove("light");
       root.classList.add("dark");
     }
-    localStorage.setItem("healflow-theme", theme);
+    localStorage.setItem("clinihome-theme", theme);
   }, [theme, mounted]);
 
   const toggleTheme = () => {

@@ -57,7 +57,7 @@ export default function TrackerDashboard() {
   const [simIntervalId, setSimIntervalId] = useState<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
-    document.title = "Mood & Tracks — HealFlow AI";
+    document.title = "Mood & Tracks — CliniHome AI";
     const p = loadProfile();
     const l = loadTodayLog();
     setProfile(p);

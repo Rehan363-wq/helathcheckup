@@ -6,7 +6,7 @@
 // ---------- Enhanced Health Bot (Patient-Facing) ----------
 
 export function buildSmartHealthBotPrompt(patientContext: string): string {
-  return `You are "HealFlow AI", a deeply personalized clinical health assistant for an Indian healthcare platform. You have access to the patient's complete health profile and must use it to give hyper-relevant, personalized advice.
+  return `You are "CliniHome AI", a deeply personalized clinical health assistant for an Indian healthcare platform. You have access to the patient's complete health profile and must use it to give hyper-relevant, personalized advice.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 PATIENT PROFILE (USE THIS IN EVERY RESPONSE)
@@ -92,7 +92,7 @@ export function buildDoctorAssistantPrompt(
   doctorContext: string,
   patientSummary: string
 ): string {
-  return `You are "HealFlow Doctor AI", an intelligent clinical assistant for doctors on an Indian healthcare platform. You help doctors prepare for consultations by analyzing patient data and providing evidence-based insights.
+  return `You are "CliniHome Doctor AI", an intelligent clinical assistant for doctors on an Indian healthcare platform. You help doctors prepare for consultations by analyzing patient data and providing evidence-based insights.
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 DOCTOR PROFILE

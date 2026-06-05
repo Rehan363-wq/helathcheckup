@@ -43,7 +43,7 @@ export default function ReportPage() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    document.title = "Report Explainer — HealFlow AI";
+    document.title = "Report Explainer — CliniHome AI";
   }, []);
   const [result, setResult] = useState<ReportAnalysis | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -57,7 +57,7 @@ export default function ReportPage() {
     let patientId = null;
     let token = "sandbox";
     try {
-      const sessionStr = localStorage.getItem("healflow-session");
+      const sessionStr = localStorage.getItem("clinihome-session");
       if (sessionStr) {
         const session = JSON.parse(sessionStr);
         patientId = session.id || null;
@@ -107,7 +107,7 @@ export default function ReportPage() {
             status: p.status === "normal" ? "optimal" : p.status,
           };
         });
-        localStorage.setItem("healflow-lab-results", JSON.stringify(mappedResults));
+        localStorage.setItem("clinihome-lab-results", JSON.stringify(mappedResults));
       } catch (err) {
         console.warn("Failed to store lab results:", err);
       }
@@ -253,7 +253,7 @@ export default function ReportPage() {
                     let patientId = null;
                     let token = "sandbox";
                     try {
-                      const sessionStr = localStorage.getItem("healflow-session");
+                      const sessionStr = localStorage.getItem("clinihome-session");
                       if (sessionStr) {
                         const session = JSON.parse(sessionStr);
                         patientId = session.id || null;

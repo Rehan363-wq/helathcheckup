@@ -71,7 +71,7 @@ export default function HealthCoachChat() {
         content: m.content,
       }));
 
-      const sessionStr = localStorage.getItem("healflow-session");
+      const sessionStr = localStorage.getItem("clinihome-session");
       const session = sessionStr ? JSON.parse(sessionStr) : null;
       const token = session?.email || "sandbox";
 
@@ -161,7 +161,7 @@ export default function HealthCoachChat() {
         </div>
         <div>
           <h1 style={{ fontFamily: "var(--font-heading)", fontSize: "18px", fontWeight: 700, margin: 0 }}>
-            HealFlow Health Coach
+            CliniHome Health Coach
           </h1>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "11px", opacity: 0.85, margin: 0, display: "flex", alignItems: "center", gap: "4px" }}>
             <Sparkles size={12} /> Gemini 2.5 Flash • Personalized Health Insights

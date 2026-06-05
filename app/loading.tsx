@@ -56,7 +56,7 @@ export default function Loading() {
           letterSpacing: "0.02em",
         }}
       >
-        Loading HealFlow...
+        Loading CliniHome...
       </p>
 
       <style jsx global>{`

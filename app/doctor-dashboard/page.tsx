@@ -39,8 +39,8 @@ export default function DoctorDashboardPage() {
 
   // Validate session
   useEffect(() => {
-    document.title = "Doctor Dashboard — HealFlow AI";
-    const session = localStorage.getItem("healflow-session");
+    document.title = "Doctor Dashboard — CliniHome AI";
+    const session = localStorage.getItem("clinihome-session");
     if (!session) {
       router.push("/login");
       return;
@@ -76,7 +76,7 @@ export default function DoctorDashboardPage() {
           const formatted = chats.map((c: any) => ({
             id: c.profiles.id,
             full_name: c.profiles.full_name || "Unknown Patient",
-            email: "patient@healflow.ai",
+            email: "patient@clinihome.ai",
             lastMessage: "Consultation initiated.",
             time: "Today",
           }));
@@ -92,7 +92,7 @@ export default function DoctorDashboardPage() {
     };
 
     const useFallbackPatients = () => {
-      const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+      const registryKey = `clinihome-sandbox-patients-${currentDoctor.id || "1"}`;
       try {
         const stored = localStorage.getItem(registryKey);
         if (stored) {
@@ -122,7 +122,7 @@ export default function DoctorDashboardPage() {
     loadPatients();
 
     // Storage listener to update active patient queue dynamically
-    const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+    const registryKey = `clinihome-sandbox-patients-${currentDoctor.id || "1"}`;
     const handleStorageChange = (e: StorageEvent) => {
       if (e.key === registryKey) {
         try {
@@ -144,7 +144,7 @@ export default function DoctorDashboardPage() {
     if (!selectedPatient || !currentDoctor) return;
 
     let activeChannel: any = null;
-    const mockKey = `healflow-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
+    const mockKey = `clinihome-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
 
     const loadMockHistory = () => {
       // Patients chat key maps to the patient's local history (shared with patient)
@@ -273,14 +273,14 @@ export default function DoctorDashboardPage() {
     }
 
     // Save locally to show in both screens
-    const mockKey = `healflow-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
+    const mockKey = `clinihome-chat-${selectedPatient.email}-${currentDoctor.id || "1"}`;
     const localHistory = [...messages, newReply];
     localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
     // Update patient registry for sandbox mode
     if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
       try {
-        const registryKey = `healflow-sandbox-patients-${currentDoctor.id || "1"}`;
+        const registryKey = `clinihome-sandbox-patients-${currentDoctor.id || "1"}`;
         const stored = localStorage.getItem(registryKey);
         let registry = [];
         if (stored) {
@@ -546,7 +546,7 @@ export default function DoctorDashboardPage() {
                       setAiLoading(true);
                       setAiSummary(null);
                       try {
-                        const sessionStr = localStorage.getItem("healflow-session");
+                        const sessionStr = localStorage.getItem("clinihome-session");
                         const session = sessionStr ? JSON.parse(sessionStr) : null;
                         const token = session?.email || "sandbox";
 

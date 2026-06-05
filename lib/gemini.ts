@@ -268,7 +268,7 @@ export async function analyzeReport(
 // ============================================================
 import { buildSmartHealthBotPrompt, buildDoctorAssistantPrompt } from "./smart-prompts";
 
-export const HEALTH_CHATBOT_PROMPT = `You are "HealFlow AI", an expert clinical triage assistant. You help users understand their symptoms and direct them to the appropriate medical care.
+export const HEALTH_CHATBOT_PROMPT = `You are "CliniHome AI", an expert clinical triage assistant. You help users understand their symptoms and direct them to the appropriate medical care.
 
 ## Your Guidelines:
 1. **Clinical Triage:** Listen to the user's symptoms. Explain what might be happening in professional English by default, or Hinglish if the user asks in Hindi/Hinglish. Be caring and empathetic.
@@ -310,7 +310,7 @@ export async function runHealthChat(
 
   const contents = [
     { role: "user" as const, parts: [{ text: systemPrompt }] },
-    { role: "model" as const, parts: [{ text: "Understood. I will act as HealFlow AI with full patient context and output strict JSON." }] },
+    { role: "model" as const, parts: [{ text: "Understood. I will act as CliniHome AI with full patient context and output strict JSON." }] },
     ...history.map((msg) => ({
       role: msg.role,
       parts: [{ text: msg.parts }],
@@ -374,7 +374,7 @@ export async function runHealthCoach(
 
   const contents = [
     { role: "user" as const, parts: [{ text: systemPrompt }] },
-    { role: "model" as const, parts: [{ text: `Understood. I am HealFlow Health Coach. I will respond in the patient's preferred language (${languagePreference}) in a strict JSON format.` }] },
+    { role: "model" as const, parts: [{ text: `Understood. I am CliniHome Health Coach. I will respond in the patient's preferred language (${languagePreference}) in a strict JSON format.` }] },
     { role: "user" as const, parts: [{ text: `Current user health data:\n${healthDataJson}` }] },
     { role: "model" as const, parts: [{ text: '{"reply": "Data received. Ready to help!", "daily_score": null, "alert": null, "tip": null}' }] },
     ...history.map((msg) => ({

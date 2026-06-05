@@ -100,7 +100,7 @@ export default function DoctorProfilePage() {
       // Load local list first (for fallback/sandbox)
       let localDocs: Doctor[] = [];
       try {
-        const stored = localStorage.getItem("healflow-doctors-list");
+        const stored = localStorage.getItem("clinihome-doctors-list");
         if (stored) {
           localDocs = JSON.parse(stored);
         } else {
@@ -166,7 +166,7 @@ export default function DoctorProfilePage() {
   // Autofill patient details from session if logged in
   useEffect(() => {
     if (typeof window !== "undefined") {
-      const session = localStorage.getItem("healflow-session");
+      const session = localStorage.getItem("clinihome-session");
       if (session) {
         try {
           const user = JSON.parse(session);
@@ -202,7 +202,7 @@ export default function DoctorProfilePage() {
 
     try {
       // Fetch existing appointments
-      const stored = localStorage.getItem("healflow-appointments");
+      const stored = localStorage.getItem("clinihome-appointments");
       const appointments = stored ? JSON.parse(stored) : [];
 
       const newAppointment = {
@@ -221,7 +221,7 @@ export default function DoctorProfilePage() {
       };
 
       appointments.push(newAppointment);
-      localStorage.setItem("healflow-appointments", JSON.stringify(appointments));
+      localStorage.setItem("clinihome-appointments", JSON.stringify(appointments));
       setBookingConfirmed(true);
     } catch (e) {
       console.error("Booking write failed:", e);

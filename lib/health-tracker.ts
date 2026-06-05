@@ -225,9 +225,9 @@ export function calculateDailyScore(log: DailyLog, profile: HealthProfile): numb
 // ---------- localStorage Helpers ----------
 
 const STORAGE_KEYS = {
-  PROFILE: "healflow-health-profile",
-  LOG_PREFIX: "healflow-health-log-",
-  CHAT_HISTORY: "healflow-health-chat",
+  PROFILE: "clinihome-health-profile",
+  LOG_PREFIX: "clinihome-health-log-",
+  CHAT_HISTORY: "clinihome-health-chat",
 };
 
 export function getDefaultProfile(): HealthProfile {

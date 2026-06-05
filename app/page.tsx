@@ -77,7 +77,7 @@ export default function LandingPage() {
           }}
         >
           <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--purple-primary)" }} className="glow-point"></span>
-          <span>HealFlow AI — Care as it should be.</span>
+          <span>CliniHome — AI Health & Doctor Connect.</span>
         </div>
 
         {/* Apple-style Serene Headline */}
@@ -263,7 +263,7 @@ export default function LandingPage() {
               <div style={{ width: "42px", height: "42px", borderRadius: "12px", background: "rgba(0,113,227,0.06)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--purple-primary)", marginBottom: "20px" }}>
                 <Sparkles size={20} />
               </div>
-              <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>HealFlow AI Assistant</h3>
+              <h3 style={{ fontSize: "18px", fontWeight: 700, marginBottom: "8px" }}>CliniHome AI Assistant</h3>
               <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5 }}>
                 Consult our clinical AI bot round-the-clock regarding general health inquiries and symptoms.
               </p>

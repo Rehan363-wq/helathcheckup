@@ -3,6 +3,7 @@ import { Inter, Playfair_Display } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/navbar";
 import { ThemeProvider } from "@/lib/theme-context";
+import StorageMigration from "@/components/storage-migration";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -20,12 +21,12 @@ const playfairDisplay = Playfair_Display({
 });
 
 export const metadata: Metadata = {
-  title: "HealFlow AI — Care as it should be",
+  title: "CliniHome — AI Health & Doctor Connect",
   description:
     "A premium, Apple-inspired healthcare web application designed to provide a serene, frictionless experience for patients and providers.",
   keywords: [
-    "HealFlow",
-    "HealFlow Health",
+    "CliniHome",
+    "CliniHome Health",
     "Serenity Health",
     "Apple healthcare",
     "premium medical platform",
@@ -48,6 +49,7 @@ export default function RootLayout({
         }}
       >
         <ThemeProvider>
+          <StorageMigration />
           <Navbar />
           <main style={{ flex: 1, paddingTop: "64px" }}>{children}</main>
         </ThemeProvider>

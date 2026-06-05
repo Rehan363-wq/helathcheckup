@@ -49,8 +49,8 @@ export default function ProfilePage() {
   const supabase = useMemo(() => createClient(), []);
 
   useEffect(() => {
-    document.title = "Edit Profile & Settings — HealFlow AI";
-    const session = localStorage.getItem("healflow-session");
+    document.title = "Edit Profile & Settings — CliniHome AI";
+    const session = localStorage.getItem("clinihome-session");
     if (!session) {
       router.push("/login");
       return;
@@ -110,11 +110,11 @@ export default function ProfilePage() {
         savePatientProfile(updatedPatient);
 
         // 2. Sync to session
-        const session = localStorage.getItem("healflow-session");
+        const session = localStorage.getItem("clinihome-session");
         if (session) {
           const parsed = JSON.parse(session);
           parsed.name = updatedPatient.name;
-          localStorage.setItem("healflow-session", JSON.stringify(parsed));
+          localStorage.setItem("clinihome-session", JSON.stringify(parsed));
           window.dispatchEvent(new Event("local-session-change"));
         }
 
@@ -162,7 +162,7 @@ export default function ProfilePage() {
 
         // Update directories list
         try {
-          const stored = localStorage.getItem("healflow-doctors-list");
+          const stored = localStorage.getItem("clinihome-doctors-list");
           if (stored) {
             const list = JSON.parse(stored);
             const index = list.findIndex((d: any) => d.id === currentUser.id || d.email === currentUser.email);
@@ -177,17 +177,17 @@ export default function ProfilePage() {
                 area: updatedDoctor.area,
                 phone: updatedDoctor.phone,
               };
-              localStorage.setItem("healflow-doctors-list", JSON.stringify(list));
+              localStorage.setItem("clinihome-doctors-list", JSON.stringify(list));
             }
           }
         } catch {}
 
         // 2. Sync to session
-        const session = localStorage.getItem("healflow-session");
+        const session = localStorage.getItem("clinihome-session");
         if (session) {
           const parsed = JSON.parse(session);
           parsed.name = updatedDoctor.name;
-          localStorage.setItem("healflow-session", JSON.stringify(parsed));
+          localStorage.setItem("clinihome-session", JSON.stringify(parsed));
           window.dispatchEvent(new Event("local-session-change"));
         }
 
@@ -256,7 +256,7 @@ export default function ProfilePage() {
       const backupData: Record<string, string> = {};
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith("healflow-")) {
+        if (key && key.startsWith("clinihome-")) {
           const val = localStorage.getItem(key);
           if (val !== null) {
             backupData[key] = val;
@@ -266,7 +266,7 @@ export default function ProfilePage() {
       const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(backupData, null, 2));
       const downloadAnchor = document.createElement("a");
       downloadAnchor.setAttribute("href", dataStr);
-      downloadAnchor.setAttribute("download", `healflow-backup-${currentUser?.email || "user"}-${new Date().toISOString().split("T")[0]}.json`);
+      downloadAnchor.setAttribute("download", `clinihome-backup-${currentUser?.email || "user"}-${new Date().toISOString().split("T")[0]}.json`);
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
@@ -289,7 +289,7 @@ export default function ProfilePage() {
         
         let importCount = 0;
         Object.keys(parsed).forEach((key) => {
-          if (key.startsWith("healflow-")) {
+          if (key.startsWith("clinihome-")) {
             localStorage.setItem(key, parsed[key]);
             importCount++;
           }

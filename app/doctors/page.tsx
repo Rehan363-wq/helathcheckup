@@ -24,7 +24,7 @@ function DoctorsListContent() {
 
   // Update searchQuery state if initialSearch changes
   useEffect(() => {
-    document.title = "Find Specialists — HealFlow AI";
+    document.title = "Find Specialists — CliniHome AI";
     if (initialSearch) {
       setSearchQuery(initialSearch);
     }
@@ -35,7 +35,7 @@ function DoctorsListContent() {
       // Initialize local storage doctors list if not exists
       let localDocs: Doctor[] = [];
       try {
-        const stored = localStorage.getItem("healflow-doctors-list");
+        const stored = localStorage.getItem("clinihome-doctors-list");
         if (stored) {
           const parsed = JSON.parse(stored);
           localDocs = parsed.map((ld: any) => ({
@@ -44,7 +44,7 @@ function DoctorsListContent() {
           }));
         } else {
           localDocs = MOCK_DOCTORS.map(d => ({ ...d, is_approved: true }));
-          localStorage.setItem("healflow-doctors-list", JSON.stringify(localDocs));
+          localStorage.setItem("clinihome-doctors-list", JSON.stringify(localDocs));
         }
       } catch (e) {
         console.warn("Failed to read/write local doctors list:", e);
@@ -169,7 +169,7 @@ function DoctorsListContent() {
               color: "var(--text-secondary)",
             }}
           >
-            Locate and book certified HealFlow practitioners. Filter by location, cost, or expertise.
+            Locate and book certified CliniHome practitioners. Filter by location, cost, or expertise.
           </p>
         </div>
 
@@ -478,7 +478,7 @@ function DoctorsListContent() {
                   boxShadow: "var(--shadow-card)",
                 }}
               >
-                📍 HealFlow Maps • Click pins to details
+                📍 CliniHome Maps • Click pins to details
               </div>
             </div>
           </div>

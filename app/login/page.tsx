@@ -24,7 +24,7 @@ export default function LoginPage() {
   const [sandboxInfo, setSandboxInfo] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Login — HealFlow AI";
+    document.title = "Login — CliniHome AI";
   }, []);
 
   // Initialize client safely
@@ -44,9 +44,9 @@ export default function LoginPage() {
   ) => {
     if (typeof window === "undefined") return;
     
-    localStorage.removeItem("healflow-appointments");
-    localStorage.removeItem("healflow-medications");
-    localStorage.removeItem("healflow-health-profile");
+    localStorage.removeItem("clinihome-appointments");
+    localStorage.removeItem("clinihome-medications");
+    localStorage.removeItem("clinihome-health-profile");
     
     if (targetRole === "patient") {
       const freshPatient = {
@@ -63,8 +63,8 @@ export default function LoginPage() {
         language_preference: "hinglish" as const,
         onboarding_completed: false,
       };
-      localStorage.setItem("healflow-patient-profile", JSON.stringify(freshPatient));
-      localStorage.removeItem("healflow-doctor-profile");
+      localStorage.setItem("clinihome-patient-profile", JSON.stringify(freshPatient));
+      localStorage.removeItem("clinihome-doctor-profile");
     } else {
       const freshDoctor = {
         name: targetName || "Dr. Demo Account",
@@ -85,8 +85,8 @@ export default function LoginPage() {
         },
         onboarding_completed: false,
       };
-      localStorage.setItem("healflow-doctor-profile", JSON.stringify(freshDoctor));
-      localStorage.removeItem("healflow-patient-profile");
+      localStorage.setItem("clinihome-doctor-profile", JSON.stringify(freshDoctor));
+      localStorage.removeItem("clinihome-patient-profile");
     }
   };
 
@@ -114,7 +114,7 @@ export default function LoginPage() {
       resetLocalStorageForSignup(targetName, targetRole, targetSpec, targetDegree, targetFees);
     }
 
-    const isDemo = targetEmail.includes("demo-") || targetEmail === "patient@healflow.ai" || targetEmail === "doctor@healflow.ai" || targetEmail === "patient@mediscan.ai" || targetEmail === "doctor@mediscan.ai";
+    const isDemo = targetEmail.includes("demo-") || targetEmail === "patient@clinihome.ai" || targetEmail === "doctor@clinihome.ai" || targetEmail === "patient@mediscan.ai" || targetEmail === "doctor@mediscan.ai";
     const supabaseMissing = !supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (isDemo || supabaseMissing) {
@@ -122,12 +122,12 @@ export default function LoginPage() {
       let doctorId = "doc-demo-id";
       if (targetRole === "doctor") {
         try {
-          const storedDocs = localStorage.getItem("healflow-doctors-list");
+          const storedDocs = localStorage.getItem("clinihome-doctors-list");
           const docs = storedDocs ? JSON.parse(storedDocs) : [];
           const found = docs.find((d: any) => d.email === targetEmail.trim());
           if (found) {
             doctorId = found.id;
-          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@healflow.ai") {
+          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@clinihome.ai") {
             doctorId = "1";
           }
         } catch (e) {}
@@ -142,11 +142,11 @@ export default function LoginPage() {
         degree: targetRole === "doctor" ? targetDegree || "MBBS" : undefined,
         fees: targetRole === "doctor" ? Number(targetFees) : undefined,
       };
-      localStorage.setItem("healflow-session", JSON.stringify(mockUser));
+      localStorage.setItem("clinihome-session", JSON.stringify(mockUser));
 
       if (isSigningUp && targetRole === "doctor") {
         try {
-          const storedDocs = localStorage.getItem("healflow-doctors-list");
+          const storedDocs = localStorage.getItem("clinihome-doctors-list");
           const docs = storedDocs ? JSON.parse(storedDocs) : [];
           if (!docs.some((d: any) => d.email === targetEmail.trim())) {
             docs.push({
@@ -163,7 +163,7 @@ export default function LoginPage() {
               phone: "+91 99999 99999",
               is_approved: false,
             });
-            localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+            localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
           }
         } catch (e) {
           console.warn("Error adding local sandbox doctor:", e);
@@ -187,7 +187,7 @@ export default function LoginPage() {
             language_preference: "hinglish" as const,
             onboarding_completed: true,
           };
-          localStorage.setItem("healflow-patient-profile", JSON.stringify(patientProfile));
+          localStorage.setItem("clinihome-patient-profile", JSON.stringify(patientProfile));
           
           const trackerProfile = {
             name: mockUser.name,
@@ -201,7 +201,7 @@ export default function LoginPage() {
             step_goal: 8000,
             sleep_goal_hrs: 8.0,
           };
-          localStorage.setItem("healflow-health-profile", JSON.stringify(trackerProfile));
+          localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
         } else if (targetRole === "doctor") {
           const doctorProfile = {
             name: mockUser.name,
@@ -222,7 +222,7 @@ export default function LoginPage() {
             },
             onboarding_completed: true,
           };
-          localStorage.setItem("healflow-doctor-profile", JSON.stringify(doctorProfile));
+          localStorage.setItem("clinihome-doctor-profile", JSON.stringify(doctorProfile));
         }
       }
 
@@ -303,7 +303,7 @@ export default function LoginPage() {
             role: activeRole,
             name: profile?.full_name || targetName || data.session.user.email,
           };
-          localStorage.setItem("healflow-session", JSON.stringify(activeUser));
+          localStorage.setItem("clinihome-session", JSON.stringify(activeUser));
 
           // Route based on onboarding status
           if (!isOnboardingCompleted(activeUser.role as "patient" | "doctor")) {
@@ -321,12 +321,12 @@ export default function LoginPage() {
       let doctorId = "doc-demo-id";
       if (targetRole === "doctor") {
         try {
-          const storedDocs = localStorage.getItem("healflow-doctors-list");
+          const storedDocs = localStorage.getItem("clinihome-doctors-list");
           const docs = storedDocs ? JSON.parse(storedDocs) : [];
           const found = docs.find((d: any) => d.email === targetEmail.trim());
           if (found) {
             doctorId = found.id;
-          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@healflow.ai") {
+          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@clinihome.ai") {
             doctorId = "1";
           }
         } catch (e) {}
@@ -338,12 +338,12 @@ export default function LoginPage() {
         name: targetName || (targetRole === "doctor" ? "Dr. Local Account" : "Local Patient"),
         isSandbox: true,
       };
-      localStorage.setItem("healflow-session", JSON.stringify(fallbackUser));
+      localStorage.setItem("clinihome-session", JSON.stringify(fallbackUser));
       setSandboxInfo("Supabase database offline or login failed. Accessing app in Sandboxed Mode.");
       
       if (isSigningUp && targetRole === "doctor") {
         try {
-          const storedDocs = localStorage.getItem("healflow-doctors-list");
+          const storedDocs = localStorage.getItem("clinihome-doctors-list");
           const docs = storedDocs ? JSON.parse(storedDocs) : [];
           if (!docs.some((d: any) => d.email === targetEmail.trim())) {
             docs.push({
@@ -360,7 +360,7 @@ export default function LoginPage() {
               phone: "+91 99999 99999",
               is_approved: false,
             });
-            localStorage.setItem("healflow-doctors-list", JSON.stringify(docs));
+            localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
           }
         } catch (e) {
           console.warn("Error adding local fallback doctor:", e);
@@ -384,7 +384,7 @@ export default function LoginPage() {
             language_preference: "hinglish" as const,
             onboarding_completed: true,
           };
-          localStorage.setItem("healflow-patient-profile", JSON.stringify(patientProfile));
+          localStorage.setItem("clinihome-patient-profile", JSON.stringify(patientProfile));
           
           const trackerProfile = {
             name: fallbackUser.name,
@@ -398,7 +398,7 @@ export default function LoginPage() {
             step_goal: 8000,
             sleep_goal_hrs: 8.0,
           };
-          localStorage.setItem("healflow-health-profile", JSON.stringify(trackerProfile));
+          localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
         } else if (targetRole === "doctor") {
           const doctorProfile = {
             name: fallbackUser.name,
@@ -419,7 +419,7 @@ export default function LoginPage() {
             },
             onboarding_completed: true,
           };
-          localStorage.setItem("healflow-doctor-profile", JSON.stringify(doctorProfile));
+          localStorage.setItem("clinihome-doctor-profile", JSON.stringify(doctorProfile));
         }
       }
 
@@ -441,7 +441,7 @@ export default function LoginPage() {
   };
 
   const handleQuickLogin = (demoRole: "patient" | "doctor") => {
-    const emailVal = demoRole === "patient" ? "demo-patient@healflow.ai" : "demo-doctor@healflow.ai";
+    const emailVal = demoRole === "patient" ? "demo-patient@clinihome.ai" : "demo-doctor@clinihome.ai";
     const passwordVal = "password";
     const nameVal = demoRole === "patient" ? "Demo Patient" : "Dr. Priya Sharma";
     const degreeVal = demoRole === "doctor" ? "MBBS, MD" : "";
@@ -491,7 +491,7 @@ export default function LoginPage() {
           }}
         >
           <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "22px", fontWeight: 700 }}>
-            Welcome to HealFlow AI
+            Welcome to CliniHome AI
           </h2>
           <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", opacity: 0.9, marginTop: "4px" }}>
             Your AI Doctor, Right in Your Pocket

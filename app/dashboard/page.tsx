@@ -73,10 +73,10 @@ export default function PatientDashboard() {
 
   // Sync data from localStorage
   useEffect(() => {
-    document.title = "Patient Dashboard — HealFlow AI";
+    document.title = "Patient Dashboard — CliniHome AI";
     if (typeof window !== "undefined") {
       // 1. User Session
-      const session = localStorage.getItem("healflow-session");
+      const session = localStorage.getItem("clinihome-session");
       if (session) {
         try {
           const user = JSON.parse(session);
@@ -87,7 +87,7 @@ export default function PatientDashboard() {
       }
 
       // 2. Appointments
-      const storedApts = localStorage.getItem("healflow-appointments");
+      const storedApts = localStorage.getItem("clinihome-appointments");
       if (storedApts) {
         try {
           const apts = JSON.parse(storedApts);
@@ -126,7 +126,7 @@ export default function PatientDashboard() {
           });
 
           if (changed) {
-            localStorage.setItem("healflow-appointments", JSON.stringify(updatedApts));
+            localStorage.setItem("clinihome-appointments", JSON.stringify(updatedApts));
           }
           setAppointments(updatedApts);
         } catch {
@@ -135,7 +135,7 @@ export default function PatientDashboard() {
       }
 
       // 3. Medications
-      const storedMeds = localStorage.getItem("healflow-medications");
+      const storedMeds = localStorage.getItem("clinihome-medications");
       if (storedMeds) {
         try {
           setMedications(JSON.parse(storedMeds));
@@ -143,7 +143,7 @@ export default function PatientDashboard() {
           setMedications([]);
         }
       } else {
-        const profileStr = localStorage.getItem("healflow-patient-profile");
+        const profileStr = localStorage.getItem("clinihome-patient-profile");
         let initialMeds = DEFAULT_MEDICATIONS;
         if (profileStr) {
           try {
@@ -160,11 +160,11 @@ export default function PatientDashboard() {
           } catch {}
         }
         setMedications(initialMeds);
-        localStorage.setItem("healflow-medications", JSON.stringify(initialMeds));
+        localStorage.setItem("clinihome-medications", JSON.stringify(initialMeds));
       }
 
       // 4. Lab Results
-      const storedLabs = localStorage.getItem("healflow-lab-results");
+      const storedLabs = localStorage.getItem("clinihome-lab-results");
       if (storedLabs) {
         try {
           setLabResults(JSON.parse(storedLabs));
@@ -173,7 +173,7 @@ export default function PatientDashboard() {
         }
       } else {
         setLabResults(DEFAULT_LAB_RESULTS);
-        localStorage.setItem("healflow-lab-results", JSON.stringify(DEFAULT_LAB_RESULTS));
+        localStorage.setItem("clinihome-lab-results", JSON.stringify(DEFAULT_LAB_RESULTS));
       }
     }
   }, []);
@@ -183,7 +183,7 @@ export default function PatientDashboard() {
       med.id === medId ? { ...med, taken: !med.taken } : med
     );
     setMedications(updated);
-    localStorage.setItem("healflow-medications", JSON.stringify(updated));
+    localStorage.setItem("clinihome-medications", JSON.stringify(updated));
   };
 
   const handleAddMedSubmit = (e: React.FormEvent) => {
@@ -200,7 +200,7 @@ export default function PatientDashboard() {
 
     const updated = [...medications, newMed];
     setMedications(updated);
-    localStorage.setItem("healflow-medications", JSON.stringify(updated));
+    localStorage.setItem("clinihome-medications", JSON.stringify(updated));
 
     // Clear form
     setNewMedName("");
@@ -212,14 +212,14 @@ export default function PatientDashboard() {
   const handleDeleteMed = (medId: string) => {
     const updated = medications.filter((m) => m.id !== medId);
     setMedications(updated);
-    localStorage.setItem("healflow-medications", JSON.stringify(updated));
+    localStorage.setItem("clinihome-medications", JSON.stringify(updated));
   };
 
   const handleCancelAppointment = (aptId: string) => {
     if (confirm("Are you sure you want to cancel this appointment?")) {
       const updated = appointments.filter((apt) => apt.id !== aptId);
       setAppointments(updated);
-      localStorage.setItem("healflow-appointments", JSON.stringify(updated));
+      localStorage.setItem("clinihome-appointments", JSON.stringify(updated));
     }
   };
 
@@ -242,7 +242,7 @@ export default function PatientDashboard() {
               Welcome back, <span className="serif-italic" style={{ color: "var(--purple-primary)" }}>{patientName.split(" ")[0]}</span>
             </h1>
             <p style={{ fontSize: "14px", color: "var(--text-secondary)", marginTop: "4px" }}>
-              HealFlow AI • Personalized health status & care overview
+              CliniHome AI • Personalized health status & care overview
             </p>
           </div>
           <Link href="/doctors" style={{ background: "var(--purple-primary)", color: "white", padding: "10px 22px", borderRadius: "100px", fontSize: "13px", fontWeight: 600, textDecoration: "none", boxShadow: "0 4px 12px rgba(0,113,227,0.12)" }}>

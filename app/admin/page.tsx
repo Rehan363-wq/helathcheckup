@@ -20,9 +20,9 @@ export default function AdminPage() {
 
   // Check auth session
   useEffect(() => {
-    document.title = "Admin Portal — HealFlow AI";
+    document.title = "Admin Portal — CliniHome AI";
     if (typeof window !== "undefined") {
-      const isAdmin = sessionStorage.getItem("healflow-admin-auth");
+      const isAdmin = sessionStorage.getItem("clinihome-admin-auth");
       if (isAdmin === "true") {
         setIsAuthenticated(true);
       }
@@ -33,7 +33,7 @@ export default function AdminPage() {
     e.preventDefault();
     const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "admin123";
     if (password === adminSecret) {
-      sessionStorage.setItem("healflow-admin-auth", "true");
+      sessionStorage.setItem("clinihome-admin-auth", "true");
       setIsAuthenticated(true);
       setAuthError("");
     } else {
@@ -42,7 +42,7 @@ export default function AdminPage() {
   };
 
   const handleLogout = () => {
-    sessionStorage.removeItem("healflow-admin-auth");
+    sessionStorage.removeItem("clinihome-admin-auth");
     setIsAuthenticated(false);
     setPassword("");
   };
@@ -55,13 +55,13 @@ export default function AdminPage() {
     // Load local list first (for fallback/sandbox)
     let localDocs: any[] = [];
     try {
-      const stored = localStorage.getItem("healflow-doctors-list");
+      const stored = localStorage.getItem("clinihome-doctors-list");
       if (stored) {
         localDocs = JSON.parse(stored);
       } else {
         localDocs = MOCK_DOCTORS.map(d => ({
           id: d.id,
-          email: `${d.name.toLowerCase().replace(/\s+/g, "").replace(".", "")}@healflow.ai`,
+          email: `${d.name.toLowerCase().replace(/\s+/g, "").replace(".", "")}@clinihome.ai`,
           full_name: d.name,
           role: "doctor",
           specialization: d.specialization,
@@ -73,7 +73,7 @@ export default function AdminPage() {
           rating: d.rating,
           phone: d.phone,
         }));
-        localStorage.setItem("healflow-doctors-list", JSON.stringify(localDocs));
+        localStorage.setItem("clinihome-doctors-list", JSON.stringify(localDocs));
       }
     } catch (e) {
       console.warn("Local storage read failed:", e);
@@ -126,13 +126,13 @@ export default function AdminPage() {
 
     // 1. Update in local storage list (sandbox)
     try {
-      const stored = localStorage.getItem("healflow-doctors-list");
+      const stored = localStorage.getItem("clinihome-doctors-list");
       if (stored) {
         const docs = JSON.parse(stored);
         const updated = docs.map((d: any) => 
           d.id === docId || d.email === email ? { ...d, is_approved: true } : d
         );
-        localStorage.setItem("healflow-doctors-list", JSON.stringify(updated));
+        localStorage.setItem("clinihome-doctors-list", JSON.stringify(updated));
         success = true;
       }
     } catch (e) {
@@ -176,13 +176,13 @@ export default function AdminPage() {
 
     // 1. Update local storage list
     try {
-      const stored = localStorage.getItem("healflow-doctors-list");
+      const stored = localStorage.getItem("clinihome-doctors-list");
       if (stored) {
         const docs = JSON.parse(stored);
         const updated = docs.map((d: any) => 
           d.id === docId || d.email === email ? { ...d, is_approved: false } : d
         );
-        localStorage.setItem("healflow-doctors-list", JSON.stringify(updated));
+        localStorage.setItem("clinihome-doctors-list", JSON.stringify(updated));
         success = true;
       }
     } catch (e) {
@@ -226,7 +226,7 @@ export default function AdminPage() {
             <div style={{ width: "56px", height: "56px", borderRadius: "16px", background: "rgba(124,58,237,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--purple-primary)", margin: "0 auto 16px" }}>
               <ShieldCheck size={28} />
             </div>
-            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>HealFlow AI Admin Portal</h2>
+            <h2 style={{ fontFamily: "var(--font-heading)", fontSize: "20px", fontWeight: 800, color: "var(--text-primary)", margin: 0 }}>CliniHome AI Admin Portal</h2>
             <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginTop: "4px" }}>Enter passkey to manage doctor listings</p>
           </div>
 

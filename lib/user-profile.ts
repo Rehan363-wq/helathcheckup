@@ -133,8 +133,8 @@ export const AGE_GROUPS = [
 // ---------- Storage Keys ----------
 
 const STORAGE_KEYS = {
-  PATIENT_PROFILE: "healflow-patient-profile",
-  DOCTOR_PROFILE: "healflow-doctor-profile",
+  PATIENT_PROFILE: "clinihome-patient-profile",
+  DOCTOR_PROFILE: "clinihome-doctor-profile",
 };
 
 // ---------- Default Profiles ----------
@@ -193,7 +193,7 @@ export function savePatientProfile(profile: PatientProfile): void {
   if (typeof window === "undefined") return;
   localStorage.setItem(STORAGE_KEYS.PATIENT_PROFILE, JSON.stringify(profile));
 
-  // Also sync to healflow-health-profile for the tracker
+  // Also sync to clinihome-health-profile for the tracker
   const trackerProfile = {
     name: profile.name,
     age: profile.age,
@@ -206,7 +206,7 @@ export function savePatientProfile(profile: PatientProfile): void {
     step_goal: 8000,
     sleep_goal_hrs: 7.5,
   };
-  localStorage.setItem("healflow-health-profile", JSON.stringify(trackerProfile));
+  localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
 }
 
 export function loadDoctorProfile(): DoctorProfile {
@@ -298,7 +298,7 @@ export function buildPatientSummaryForDoctor(patientProfile?: PatientProfile): s
   if (typeof window !== "undefined") {
     try {
       const todayStr = getLocalDateStr();
-      const logStr = localStorage.getItem(`healflow-health-log-${todayStr}`);
+      const logStr = localStorage.getItem(`clinihome-health-log-${todayStr}`);
       if (logStr) {
         const log = JSON.parse(logStr);
         healthData = {

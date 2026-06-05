@@ -3,9 +3,10 @@
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { Menu, X, Activity, Sun, Moon, LogOut, User } from "lucide-react";
+import { Menu, X, Sun, Moon, LogOut, User } from "lucide-react";
 import { useTheme } from "@/lib/theme-context";
 import { isOnboardingCompleted } from "@/lib/user-profile";
+import Logo from "@/components/logo";
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -17,7 +18,7 @@ export default function Navbar() {
 
   // Route Guard: enforce authentication and onboarding
   useEffect(() => {
-    const session = localStorage.getItem("healflow-session");
+    const session = localStorage.getItem("clinihome-session");
     const isPublicRoute = pathname === "/" || pathname === "/login";
     const isOnboardingRoute = pathname === "/onboarding";
 
@@ -61,7 +62,7 @@ export default function Navbar() {
   // Sync session state from localStorage
   useEffect(() => {
     const checkSession = () => {
-      const session = localStorage.getItem("healflow-session");
+      const session = localStorage.getItem("clinihome-session");
       if (session) {
         try {
           setUser(JSON.parse(session));
@@ -84,7 +85,7 @@ export default function Navbar() {
   }, [pathname]);
 
   const handleLogout = () => {
-    localStorage.removeItem("healflow-session");
+    localStorage.removeItem("clinihome-session");
     setUser(null);
     window.location.href = "/";
   };
@@ -106,7 +107,7 @@ export default function Navbar() {
       { href: "/doctors", label: "Find Specialists" },
       { href: "/scan", label: "Skin Analyzer" },
       { href: "/report", label: "Report Explainer" },
-      { href: "/health-bot", label: "HealFlow AI Bot" },
+      { href: "/health-bot", label: "CliniHome AI Bot" },
       { href: "/tracker", label: "Mood & Tracks" },
       { href: "/reminders", label: "Reminders" },
     ];
@@ -138,54 +139,13 @@ export default function Navbar() {
           : "1px solid transparent",
       }}
     >
-      {/* Logo */}
       <Link
         href="/"
         style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
           textDecoration: "none",
         }}
       >
-        <div
-          style={{
-            width: "36px",
-            height: "36px",
-            borderRadius: "10px",
-            background: "linear-gradient(135deg, #0071E3, #3897FD)",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <Activity size={20} color="white" />
-        </div>
-        <span
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontWeight: 800,
-            fontSize: "20px",
-            color: "var(--text-primary)",
-            letterSpacing: "-0.03em",
-          }}
-        >
-          HealFlow
-        </span>
-        <span
-          style={{
-            fontFamily: "var(--font-heading)",
-            fontWeight: 600,
-            fontSize: "12px",
-            color: "white",
-            background: "var(--purple-primary)",
-            padding: "2px 8px",
-            borderRadius: "6px",
-            marginLeft: "2px",
-          }}
-        >
-          AI
-        </span>
+        <Logo size="md" showSubtitle={false} />
       </Link>
 
       {/* Navigation controls */}
@@ -320,7 +280,7 @@ export default function Navbar() {
                 }}
                 className="hover:scale-105"
               >
-                Access HealFlow
+                Access CliniHome
               </Link>
             )
           )}
@@ -439,7 +399,7 @@ export default function Navbar() {
                   textAlign: "center",
                 }}
               >
-                Access HealFlow
+                Access CliniHome
               </Link>
             )
           )}
