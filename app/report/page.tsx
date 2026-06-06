@@ -51,6 +51,21 @@ export default function ReportPage() {
   const handleFileSelect = async (file: File) => {
     setError(null);
     setResult(null);
+
+    // Validate file size (max 10MB)
+    const MAX_SIZE_MB = 10;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setError(`File is too large. Maximum size allowed is ${MAX_SIZE_MB}MB.`);
+      return;
+    }
+
+    // Validate file type (image or PDF only)
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp", "application/pdf"];
+    if (!allowedTypes.includes(file.type)) {
+      setError("Invalid file format. Please upload an image file (JPEG, PNG, WEBP) or PDF.");
+      return;
+    }
+
     setIsLoading(true);
 
     // Retrieve active patient session
@@ -396,97 +411,99 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
             </div>
 
             {/* Parameter Table */}
-            <div
-              id="parameter-table"
-              style={{
-                background: "var(--bg-card)",
-                borderRadius: "16px",
-                boxShadow: "var(--shadow-card)",
-                overflow: "hidden",
-              }}
-            >
-              {/* Table Header */}
+            <div style={{ overflowX: "auto", width: "100%", borderRadius: "16px", boxShadow: "var(--shadow-card)", border: "1px solid var(--border)" }}>
               <div
+                id="parameter-table"
                 style={{
-                  display: "grid",
-                  gridTemplateColumns: "2fr 1fr 1fr 100px",
-                  gap: "16px",
-                  padding: "16px 20px",
-                  background: "var(--bg-surface)",
-                  borderBottom: "1px solid var(--border)",
+                  background: "var(--bg-card)",
+                  borderRadius: "16px",
+                  overflow: "hidden",
+                  minWidth: "600px",
                 }}
               >
-                {["Parameter", "Value", "Normal", "Status"].map((h) => (
-                  <p
-                    key={h}
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "11px",
-                      fontWeight: 500,
-                      textTransform: "uppercase",
-                      letterSpacing: "0.05em",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    {h}
-                  </p>
-                ))}
-              </div>
-
-              {/* Table Rows */}
-              {result.parameters.map((param, i) => (
+                {/* Table Header */}
                 <div
-                  key={param.name}
                   style={{
                     display: "grid",
                     gridTemplateColumns: "2fr 1fr 1fr 100px",
                     gap: "16px",
-                    padding: "14px 20px",
-                    background: i % 2 === 1 ? "rgba(128, 128, 128, 0.05)" : "transparent",
+                    padding: "16px 20px",
+                    background: "var(--bg-surface)",
                     borderBottom: "1px solid var(--border)",
-                    alignItems: "center",
                   }}
                 >
-                  <p
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "14px",
-                      fontWeight: 500,
-                      color: "var(--text-primary)",
-                    }}
-                  >
-                    {param.name}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "14px",
-                      fontWeight: 600,
-                      color: param.status !== "normal" ? "var(--severity-high)" : "var(--text-primary)",
-                    }}
-                  >
-                    {param.value}
-                  </p>
-                  <p
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "13px",
-                      color: "var(--text-muted)",
-                    }}
-                  >
-                    {param.normalRange}
-                  </p>
-                  <span
-                    style={{
-                      fontFamily: "var(--font-body)",
-                      fontSize: "12px",
-                      fontWeight: 500,
-                    }}
-                  >
-                    {statusIcon(param.status)}
-                  </span>
+                  {["Parameter", "Value", "Normal", "Status"].map((h) => (
+                    <p
+                      key={h}
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "11px",
+                        fontWeight: 500,
+                        textTransform: "uppercase",
+                        letterSpacing: "0.05em",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {h}
+                    </p>
+                  ))}
                 </div>
-              ))}
+
+                {/* Table Rows */}
+                {result.parameters.map((param, i) => (
+                  <div
+                    key={param.name}
+                    style={{
+                      display: "grid",
+                      gridTemplateColumns: "2fr 1fr 1fr 100px",
+                      gap: "16px",
+                      padding: "14px 20px",
+                      background: i % 2 === 1 ? "rgba(128, 128, 128, 0.05)" : "transparent",
+                      borderBottom: "1px solid var(--border)",
+                      alignItems: "center",
+                    }}
+                  >
+                    <p
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "14px",
+                        fontWeight: 500,
+                        color: "var(--text-primary)",
+                      }}
+                    >
+                      {param.name}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "14px",
+                        fontWeight: 600,
+                        color: param.status !== "normal" ? "var(--severity-high)" : "var(--text-primary)",
+                      }}
+                    >
+                      {param.value}
+                    </p>
+                    <p
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "13px",
+                        color: "var(--text-muted)",
+                      }}
+                    >
+                      {param.normalRange}
+                    </p>
+                    <span
+                      style={{
+                        fontFamily: "var(--font-body)",
+                        fontSize: "12px",
+                        fontWeight: 500,
+                      }}
+                    >
+                      {statusIcon(param.status)}
+                    </span>
+                  </div>
+                ))}
+              </div>
             </div>
 
             {/* Explanation Cards (for abnormal values) */}

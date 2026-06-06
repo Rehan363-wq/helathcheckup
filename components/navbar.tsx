@@ -86,6 +86,7 @@ export default function Navbar() {
 
   const handleLogout = () => {
     localStorage.removeItem("clinihome-session");
+    document.cookie = "clinihome-session=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax";
     setUser(null);
     window.location.href = "/";
   };
@@ -207,6 +208,7 @@ export default function Navbar() {
               transition: "background 0.2s",
             }}
             title="Toggle Theme"
+            aria-label="Toggle Theme"
           >
             {theme === "dark" ? <Sun size={18} /> : <Moon size={18} />}
           </button>
@@ -257,6 +259,7 @@ export default function Navbar() {
                   borderRadius: "50%",
                 }}
                 title="Logout"
+                aria-label="Logout"
               >
                 <LogOut size={14} />
               </button>
@@ -407,7 +410,7 @@ export default function Navbar() {
       )}
 
       <style jsx>{`
-        @media (max-width: 992px) {
+        @media (max-width: 1150px) {
           .desktop-nav {
             display: none !important;
           }

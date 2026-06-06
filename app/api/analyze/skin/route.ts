@@ -1,11 +1,14 @@
 import { analyzeSkinImage } from "@/lib/gemini";
 import { createServiceClient } from "@/lib/supabase/server";
 import { NextRequest } from "next/server";
-import { validateApiRequest } from "@/lib/api-auth";
+import { validateApiRequest, checkRateLimit } from "@/lib/api-auth";
 
 export async function POST(request: NextRequest) {
   try {
-    if (!validateApiRequest(request)) {
+    if (!checkRateLimit(request).success) {
+      return Response.json({ error: "Too many requests. Please try again later." }, { status: 429 });
+    }
+    if (!(await validateApiRequest(request))) {
       return Response.json({ error: "Unauthorized access" }, { status: 401 });
     }
     const body = await request.json();

@@ -16,7 +16,7 @@ interface MedicineReminder {
 function RemindersContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string; role: string; name: string; isSandbox?: boolean } | null>(null);
   
   const [reminders, setReminders] = useState<MedicineReminder[]>([]);
   const [name, setName] = useState("");

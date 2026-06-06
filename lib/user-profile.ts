@@ -151,7 +151,7 @@ export function getDefaultPatientProfile(): PatientProfile {
     allergies: [],
     uploaded_reports: [],
     health_goals: [],
-    language_preference: "hinglish",
+    language_preference: "english",
     onboarding_completed: false,
   };
 }
@@ -335,7 +335,7 @@ export function buildPatientSummaryForDoctor(patientProfile?: PatientProfile): s
 
 // ---------- Client-Side Supabase Sync Helpers ----------
 
-export function syncProfileToLocalStorage(role: "patient" | "doctor", dbProfile: any, reports?: any[]): void {
+export function syncProfileToLocalStorage(role: "patient" | "doctor", dbProfile: Record<string, any>, reports?: Record<string, any>[]): void {
   if (typeof window === "undefined") return;
 
   if (role === "patient") {
@@ -357,7 +357,7 @@ export function syncProfileToLocalStorage(role: "patient" | "doctor", dbProfile:
         summary: r.summary || "",
       })) : [],
       health_goals: dbProfile.health_goals || [],
-      language_preference: dbProfile.language_preference || "hinglish",
+      language_preference: dbProfile.language_preference || "english",
       onboarding_completed: dbProfile.onboarding_completed || false,
     };
     savePatientProfile(patientProfile);

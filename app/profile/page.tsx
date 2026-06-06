@@ -627,6 +627,65 @@ export default function ProfilePage() {
                 </p>
               )}
             </div>
+
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+              <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px" }}>
+                🔒 Local Storage Data Privacy Notice
+              </p>
+              <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "12px", lineHeight: 1.45 }}>
+                CliniHome AI stores your health metrics, consultation history, and prescriptions locally in your browser's <code>localStorage</code> for fast access and offline sandbox capability. If you are using a shared or public computer, please remember to **sign out** or use **Privacy & Data Erasure** below to erase your health records from this browser.
+              </p>
+            </div>
+
+            <div style={{ borderTop: "1px solid var(--border)", paddingTop: "20px" }}>
+              <p style={{ fontSize: "13px", fontWeight: 600, color: "var(--text-primary)", marginBottom: "8px" }}>
+                Privacy & Data Erasure (GDPR / DPDPA)
+              </p>
+              <p style={{ fontSize: "12px", color: "var(--text-secondary)", marginBottom: "12px", lineHeight: 1.45 }}>
+                Under GDPR and DPDPA regulations, you have the right to erase all your personal health data. Wiping your records deletes your patient metrics, upload logs, reminders, local appointments, and sandbox chats.
+              </p>
+              <button
+                type="button"
+                onClick={async () => {
+                  if (confirm("Are you sure you want to permanently delete all your health records, logs, and account session? This action is irreversible.")) {
+                    let deleteCount = 0;
+                    const keysToDelete: string[] = [];
+                    for (let i = 0; i < localStorage.length; i++) {
+                      const key = localStorage.key(i);
+                      if (key && key.startsWith("clinihome-")) {
+                        keysToDelete.push(key);
+                      }
+                    }
+                    keysToDelete.forEach(k => {
+                      localStorage.removeItem(k);
+                      deleteCount++;
+                    });
+
+                    if (supabase && currentUser?.id && !currentUser.isSandbox) {
+                      try {
+                        await supabase.auth.signOut();
+                      } catch (err) {}
+                    }
+
+                    alert(`Privacy request processed. Erased ${deleteCount} local data records and signed out.`);
+                    router.push("/login");
+                  }
+                }}
+                style={{
+                  background: "none",
+                  border: "1px solid var(--severity-high)",
+                  color: "var(--severity-high)",
+                  padding: "10px 20px",
+                  borderRadius: "100px",
+                  fontWeight: 600,
+                  fontSize: "13px",
+                  cursor: "pointer",
+                  transition: "all 0.2s",
+                }}
+              >
+                Permanently Delete My Data & Account
+              </button>
+            </div>
           </div>
         </div>
       </div>

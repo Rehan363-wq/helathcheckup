@@ -6,6 +6,14 @@ import { createClient } from "@/lib/supabase/client";
 import { MOCK_DOCTORS } from "@/lib/doctors";
 import { Send, User, MessageSquare, ArrowLeft, ShieldAlert } from "lucide-react";
 
+const getInitials = (name: string) => {
+  const clean = name.replace(/^Dr\.\s+/i, "");
+  const parts = clean.split(/\s+/).filter(Boolean);
+  if (parts.length === 0) return "DR";
+  if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+  return (parts[0][0] + parts[1][0]).toUpperCase();
+};
+
 interface Profile {
   id: string;
   full_name: string;
@@ -23,7 +31,7 @@ interface ChatMessage {
 
 export default function ChatPage() {
   const router = useRouter();
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [currentUser, setCurrentUser] = useState<{ id: string; email: string; role: string; name: string; isSandbox?: boolean } | null>(null);
   const [doctors, setDoctors] = useState<Profile[]>([]);
   const [selectedDoctor, setSelectedDoctor] = useState<Profile | null>(null);
   
@@ -231,9 +239,15 @@ export default function ChatPage() {
       created_at: new Date().toISOString(),
     };
 
-    setMessages((prev) => [...prev, newMsg]);
+    const localHistory = [...messages, newMsg];
+    setMessages(localHistory);
+
+    // Save locally
+    const mockKey = `clinihome-chat-${currentUser.email}-${selectedDoctor.id}`;
+    localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
     const isSandboxFlow = !supabase || currentUser.isSandbox;
+    let chatId = null;
 
     if (!isSandboxFlow) {
       try {
@@ -245,6 +259,7 @@ export default function ChatPage() {
           .single();
 
         if (chatData?.id) {
+          chatId = chatData.id;
           const { error } = await supabase.from("messages").insert({
             chat_id: chatData.id,
             sender_id: currentUser.id,
@@ -256,11 +271,6 @@ export default function ChatPage() {
         console.warn("DB save failed, using local sandbox fallback for message");
       }
     }
-
-    // Save locally
-    const mockKey = `clinihome-chat-${currentUser.email}-${selectedDoctor.id}`;
-    const localHistory = [...messages, newMsg];
-    localStorage.setItem(mockKey, JSON.stringify(localHistory));
 
     // Update patient registry for sandbox doctor dashboard queue
     if (isSandboxFlow || dbStatus?.includes("Sandbox")) {
@@ -284,6 +294,77 @@ export default function ChatPage() {
       } catch (e) {
         console.warn("Failed to update sandbox patient registry:", e);
       }
+    }
+
+    // Call API for Doctor AI reply simulation
+    setLoading(true);
+    try {
+      let patientProfile = null;
+      try {
+        const storedProfile = localStorage.getItem("clinihome-patient-profile");
+        if (storedProfile) {
+          patientProfile = JSON.parse(storedProfile);
+        }
+      } catch (e) {}
+
+      let token = "sandbox";
+      try {
+        const sessionStr = localStorage.getItem("clinihome-session");
+        if (sessionStr) {
+          const session = JSON.parse(sessionStr);
+          token = session.email || "sandbox";
+        }
+      } catch (e) {}
+
+      const response = await fetch("/api/chat/doctor", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${token}`
+        },
+        body: JSON.stringify({
+          messages: localHistory,
+          doctorProfile: {
+            id: selectedDoctor.id,
+            full_name: selectedDoctor.full_name,
+            specialization: selectedDoctor.specialization,
+          },
+          patientProfile: patientProfile,
+        }),
+      });
+
+      const data = await response.json();
+      if (data.reply) {
+        const aiMsg: ChatMessage = {
+          id: `ai-${Date.now()}`,
+          sender_id: selectedDoctor.id,
+          content: data.reply,
+          created_at: new Date().toISOString(),
+        };
+
+        setMessages((prev) => {
+          const updated = [...prev, aiMsg];
+          localStorage.setItem(mockKey, JSON.stringify(updated));
+          return updated;
+        });
+
+        // Save AI reply to DB if not sandbox
+        if (!isSandboxFlow && chatId) {
+          try {
+            await supabase.from("messages").insert({
+              chat_id: chatId,
+              sender_id: selectedDoctor.id,
+              content: data.reply,
+            });
+          } catch (dbErr) {
+            console.warn("Failed to write AI reply to database:", dbErr);
+          }
+        }
+      }
+    } catch (err) {
+      console.error("Failed to get doctor AI response:", err);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -359,7 +440,7 @@ export default function ChatPage() {
                   fontSize: "14px",
                 }}
               >
-                {doc.full_name.substring(4, 6)}
+                {getInitials(doc.full_name)}
               </div>
               <div style={{ flex: 1 }}>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>
@@ -428,7 +509,7 @@ export default function ChatPage() {
                   fontWeight: 600,
                 }}
               >
-                {selectedDoctor.full_name.substring(4, 6)}
+                {getInitials(selectedDoctor.full_name)}
               </div>
               <div>
                 <p style={{ fontFamily: "var(--font-body)", fontSize: "14px", fontWeight: 600, color: "var(--text-primary)" }}>

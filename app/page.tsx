@@ -14,12 +14,12 @@ import {
   FileText, 
   Heart, 
   Calendar, 
-  Sparkles,
-  PhoneCall
+  Sparkles
 } from "lucide-react";
 
 export default function LandingPage() {
   const [searchQuery, setSearchQuery] = useState("");
+  const [showEmergencyModal, setShowEmergencyModal] = useState(false);
   const router = useRouter();
 
   const handleSearchSubmit = (e: React.FormEvent) => {
@@ -132,6 +132,7 @@ export default function LandingPage() {
           <input
             type="text"
             placeholder="Search specialists by name, specialty, or condition..."
+            aria-label="Search specialists by name, specialty, or condition"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
@@ -385,7 +386,7 @@ export default function LandingPage() {
             href="tel:112"
             onClick={(e) => {
               e.preventDefault();
-              alert("SIMULATING EMERGENCY CALL: Connecting with Emergency Dispatch (Dialing 112)...");
+              setShowEmergencyModal(true);
             }}
             style={{
               background: "var(--severity-high)",
@@ -404,6 +405,65 @@ export default function LandingPage() {
           </a>
         </div>
       </section>
+
+      {/* Emergency Simulation Modal */}
+      {showEmergencyModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--border-color, rgba(0, 0, 0, 0.1))",
+              borderRadius: "20px",
+              padding: "32px",
+              maxWidth: "450px",
+              width: "90%",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+              textAlign: "center",
+            }}
+          >
+            <div style={{ fontSize: "40px", marginBottom: "16px" }}>🚨</div>
+            <h3 style={{ fontSize: "20px", fontWeight: 700, margin: "0 0 12px 0", color: "var(--severity-high)" }}>
+              Emergency Simulation
+            </h3>
+            <p style={{ fontSize: "14px", color: "var(--text-secondary)", margin: "0 0 24px 0", lineHeight: 1.5 }}>
+              Connecting with emergency services...
+              <br />
+              <span style={{ fontWeight: 600, color: "var(--text-primary)" }}>Dialing 112 (Dispatcher)</span>
+              <br /><br />
+              <span style={{ fontSize: "12px", fontStyle: "italic" }}>Note: This is a demo simulation. In a real emergency, please call your local emergency services number directly from a phone line.</span>
+            </p>
+            <button
+              onClick={() => setShowEmergencyModal(false)}
+              style={{
+                background: "var(--purple-primary)",
+                color: "white",
+                fontWeight: 600,
+                fontSize: "14px",
+                padding: "10px 24px",
+                borderRadius: "100px",
+                border: "none",
+                cursor: "pointer",
+              }}
+            >
+              Close Simulation
+            </button>
+          </div>
+        </div>
+      )}
 
     </div>
   );

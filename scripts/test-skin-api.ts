@@ -4,9 +4,9 @@ import * as path from "path";
 async function testSkinApi() {
   console.log("🚀 Testing Skin Analyzer API...");
   
-  const imagePath = path.join(__dirname, "../skin_dryness_test.png");
+  const imagePath = path.join(__dirname, "../public/demo/skin_dryness_test.png");
   if (!fs.existsSync(imagePath)) {
-    console.error("❌ Error: skin_dryness_test.png not found in workspace root");
+    console.error("❌ Error: skin_dryness_test.png not found in public/demo/");
     process.exit(1);
   }
 

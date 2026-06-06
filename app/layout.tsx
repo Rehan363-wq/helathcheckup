@@ -20,6 +20,12 @@ const playfairDisplay = Playfair_Display({
   display: "swap",
 });
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+};
+
 export const metadata: Metadata = {
   title: "CliniHome — AI Health & Doctor Connect",
   description:
@@ -27,7 +33,7 @@ export const metadata: Metadata = {
   keywords: [
     "CliniHome",
     "CliniHome Health",
-    "Serenity Health",
+    "CliniHome AI",
     "Apple healthcare",
     "premium medical platform",
   ],

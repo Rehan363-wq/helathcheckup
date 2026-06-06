@@ -205,6 +205,18 @@ export default function DoctorProfilePage() {
       const stored = localStorage.getItem("clinihome-appointments");
       const appointments = stored ? JSON.parse(stored) : [];
 
+      const isConflict = appointments.some(
+        (apt: any) =>
+          apt.doctorId === doctor?.id &&
+          apt.date === selectedDate &&
+          apt.time === selectedTime
+      );
+
+      if (isConflict) {
+        setBookingError("This time slot is already booked for this specialist. Please choose another slot.");
+        return;
+      }
+
       const newAppointment = {
         id: "apt-" + Date.now(),
         doctorId: doctor?.id,

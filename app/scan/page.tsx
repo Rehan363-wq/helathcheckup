@@ -22,6 +22,20 @@ export default function ScanPage() {
   const handleFileSelect = async (file: File) => {
     setError(null);
     setResult(null);
+
+    // Validate file size (max 5MB)
+    const MAX_SIZE_MB = 5;
+    if (file.size > MAX_SIZE_MB * 1024 * 1024) {
+      setError(`File is too large. Maximum size allowed is ${MAX_SIZE_MB}MB.`);
+      return;
+    }
+
+    // Validate file type (image only)
+    if (!file.type.startsWith("image/")) {
+      setError("Invalid file format. Please upload an image file (JPEG, PNG, WEBP).");
+      return;
+    }
+
     setIsLoading(true);
 
     // Create preview
@@ -196,7 +210,7 @@ export default function ScanPage() {
                         setIsLoading(true);
                         setError(null);
                         
-                        const res = await fetch("/skin_dryness_test.png");
+                        const res = await fetch("/demo/skin_dryness_test.png");
                         const blob = await res.blob();
                         const file = new File([blob], "skin_dryness_test.png", { type: "image/png" });
                         
@@ -358,7 +372,7 @@ export default function ScanPage() {
                     color: "var(--text-primary)",
                   }}
                 >
-                  Best Results Ke Liye
+                  Tips for Best Results
                 </h3>
               </div>
 

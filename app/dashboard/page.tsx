@@ -418,21 +418,21 @@ export default function PatientDashboard() {
                     placeholder="Medication Name (e.g. Omega 3)" 
                     value={newMedName}
                     onChange={(e) => setNewMedName(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", background: "white", outline: "none", color: "var(--text-primary)" }}
+                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", background: "var(--bg-card)", outline: "none", color: "var(--text-primary)" }}
                   />
                   <input 
                     type="text" 
                     placeholder="Dosage (e.g. 1000mg, 1 softgel)" 
                     value={newMedDosage}
                     onChange={(e) => setNewMedDosage(e.target.value)}
-                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", background: "white", outline: "none", color: "var(--text-primary)" }}
+                    style={{ padding: "8px 12px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "13px", background: "var(--bg-card)", outline: "none", color: "var(--text-primary)" }}
                   />
                   <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
                     <span style={{ fontSize: "11px", fontWeight: 700, color: "var(--text-secondary)" }}>Timing:</span>
                     <select
                       value={newMedTiming}
                       onChange={(e) => setNewMedTiming(e.target.value as any)}
-                      style={{ padding: "6px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "12px", background: "white", outline: "none", color: "var(--text-primary)" }}
+                      style={{ padding: "6px", borderRadius: "6px", border: "1px solid var(--border)", fontSize: "12px", background: "var(--bg-card)", outline: "none", color: "var(--text-primary)" }}
                     >
                       <option value="Morning">Morning</option>
                       <option value="Afternoon">Afternoon</option>
@@ -495,10 +495,17 @@ export default function PatientDashboard() {
             </div>
             
           </div>
-
         </div>
-
       </div>
+
+      <style jsx>{`
+        @media (max-width: 992px) {
+          .dashboard-grid {
+            grid-template-columns: 1fr !important;
+            gap: 24px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

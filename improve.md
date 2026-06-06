@@ -1,6 +1,6 @@
-# HealFlow AI — Product Improvement Backlog (`improve.md`)
+# CliniHome AI — Product Improvement Backlog (`improve.md`)
 
-This document lists the completed bugs, visual issues, security upgrades, and architectural enhancements executed to elevate HealFlow AI to a robust, enterprise-ready healthcare platform.
+This document lists the completed bugs, visual issues, security upgrades, and architectural enhancements executed to elevate CliniHome AI to a robust, enterprise-ready healthcare platform.
 
 ---
 
@@ -27,6 +27,27 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 ### 7. Doctor Dashboard Responsiveness & Styling Highlights
 - **Fix**: Corrected doctor dashboard responsive layout query constraint for mobile devices, standardized highlights to CSS custom properties, and added focus outline borders.
 
+### 8. Mobile Responsiveness Polish
+- **Fix**: Added media queries for narrow mobile screen width (`max-width: 480px`) to stack tracker dashboard stats columns vertically.
+
+### 9. Accessibility Enhancements
+- **Fix**: Implemented `aria-label` accessibility attributes on inputs, buttons, and select tags in critical forms (landing search, login, health bot).
+
+### 10. Refactoring and Duplication Clean-Up
+- **Fix**: Extracted sandbox login routines in `app/login/page.tsx` into a `loginToSandbox` helper, eliminating 200+ duplicate lines and strictly typing user/doctor context states.
+
+### 11. Production Rate Limiting
+- **Fix**: Added client IP-based in-memory rate limiting to protect Gemini AI endpoints against abuse.
+
+### 12. Security Guards & HTTP Headers
+- **Fix**: Configured Next.js proxy routing guards and injected HTTP headers (`X-Frame-Options`, `Strict-Transport-Security`, etc.) in `next.config.ts`.
+
+### 13. Local Storage Disclaimer
+- **Fix**: Added local storage data transparency notices in user profile settings.
+
+### 14. Testing & DevOps Integration
+- **Fix**: Set up Vitest test suite, designed a basic GitHub Actions compile workflow, and relocated demo assets.
+
 ---
 
 ## 🛠️ Implementation Progress Tracker
@@ -36,7 +57,7 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 - [x] Task 3: Real Gemini-Driven Sandbox Doctor Chat (`app/chat/page.tsx`)
 - [x] Task 4: Dynamic PDF/Image Report Summary extraction in Onboarding (`app/onboarding/page.tsx`)
 - [x] Task 5: Core CSS Design System Refinement & Styling Polish (`app/globals.css`)
-- [x] Task 6: Rebrand all leftover "Vitalis" & "MediScan" to "HealFlow AI"
+- [x] Task 6: Rebrand all leftover "Vitalis" & "MediScan" to "CliniHome AI"
 - [x] Task 7: Professionalize all Hinglish button labels/headers to English
 - [x] Task 8: Implement dynamic page transitions screen loader (`app/loading.tsx`)
 - [x] Task 9: Secure admin credentials and add authorization session checks to all API routes
@@ -47,4 +68,9 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 - [x] Task 14: Support dynamic user language preference in AI Health Coach system prompt and client UI
 - [x] Task 15: Support dynamic user language preference in AI Doctor Consultation Chat POST endpoint
 - [x] Task 16: Support dynamic user language preference in AI skin analysis and AI report analysis prompts
-- [x] Task 17: Build compile verification and update STATE.md / walkthrough.md
+- [x] Task 17: Support mobile layout responsiveness on tracker stats page (`app/tracker/page.tsx`)
+- [x] Task 18: Add accessibility aria-label attributes to forms and buttons
+- [x] Task 19: Refactor login duplication and eliminate loose type parameters
+- [x] Task 20: Add in-memory client IP rate-limiting to protect Gemini endpoints
+- [x] Task 21: Add root Next.js proxy guards, HTTP security headers, and local storage disclaimer
+- [x] Task 22: Configure Vitest, set up CI/CD pipeline, relocate assets, and compile verify

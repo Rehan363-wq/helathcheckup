@@ -437,6 +437,7 @@ export default function HealthBotPage() {
             onChange={(e) => setInput(e.target.value)}
             disabled={loading}
             placeholder="Type your message here..."
+            aria-label="Type your message here"
             className="chat-input"
             style={{
               flex: 1,
@@ -454,6 +455,7 @@ export default function HealthBotPage() {
           <button
             type="submit"
             disabled={loading || !input.trim()}
+            aria-label="Send message"
             style={{
               width: "44px",
               height: "44px",

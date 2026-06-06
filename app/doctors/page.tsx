@@ -478,7 +478,7 @@ function DoctorsListContent() {
                   boxShadow: "var(--shadow-card)",
                 }}
               >
-                📍 CliniHome Maps • Click pins to details
+                📍 Interactive Map Preview (Coming Soon) • Click pins for details
               </div>
             </div>
           </div>

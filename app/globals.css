@@ -1,6 +1,6 @@
 @import "tailwindcss";
 
-/* ===== Serenity Health Systems Design Tokens ===== */
+/* ===== CliniHome AI Design Tokens ===== */
 :root {
   /* Default: Premium Peaceful White */
   --bg-dark: #F9F9FB;
@@ -8,7 +8,7 @@
   --bg-card: #FFFFFF;
   --bg-card-dark: #F4F4F6;
 
-  /* Vitalis Blue Accent */
+  /* CliniHome Blue Accent */
   --purple-primary: #0071E3;
   --purple-light: #3897FD;
   --purple-glow: rgba(0, 113, 227, 0.06);

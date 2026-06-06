@@ -23,12 +23,45 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [sandboxInfo, setSandboxInfo] = useState<string | null>(null);
 
+  const [showResetModal, setShowResetModal] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetError, setResetError] = useState("");
+
+  const handleResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setResetError("");
+    setResetSuccess(false);
+
+    if (!resetEmail.trim()) {
+      setResetError("Please enter your email address.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (supabase) {
+        const { error: resetErr } = await supabase.auth.resetPasswordForEmail(resetEmail.trim(), {
+          redirectTo: `${window.location.origin}/login?reset=true`,
+        });
+        if (resetErr) {
+          console.warn("Supabase password reset failed, using sandbox fallback:", resetErr.message);
+        }
+      }
+      setResetSuccess(true);
+    } catch (err) {
+      setResetError("Failed to initiate password reset. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     document.title = "Login — CliniHome AI";
   }, []);
 
   // Initialize client safely
-  let supabase: any = null;
+  let supabase: ReturnType<typeof createClient> = null;
   try {
     supabase = createClient();
   } catch (e) {
@@ -60,7 +93,7 @@ export default function LoginPage() {
         allergies: [],
         uploaded_reports: [],
         health_goals: [],
-        language_preference: "hinglish" as const,
+        language_preference: "english" as const,
         onboarding_completed: false,
       };
       localStorage.setItem("clinihome-patient-profile", JSON.stringify(freshPatient));
@@ -87,6 +120,135 @@ export default function LoginPage() {
       };
       localStorage.setItem("clinihome-doctor-profile", JSON.stringify(freshDoctor));
       localStorage.removeItem("clinihome-patient-profile");
+    }
+  };
+
+  const loginToSandbox = (
+    targetEmail: string,
+    targetRole: "patient" | "doctor",
+    targetName: string,
+    targetSpec: string,
+    targetDegree: string,
+    targetFees: string,
+    isSigningUp: boolean,
+    isFallback: boolean = false
+  ) => {
+    let doctorId = "doc-demo-id";
+    if (targetRole === "doctor") {
+      try {
+        const storedDocs = localStorage.getItem("clinihome-doctors-list");
+        const docs = storedDocs ? JSON.parse(storedDocs) : [];
+        const found = docs.find((d: any) => d.email === targetEmail.trim());
+        if (found) {
+          doctorId = found.id;
+        } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@clinihome.ai") {
+          doctorId = "1";
+        }
+      } catch (e) {}
+    }
+    const mockUser = {
+      id: targetRole === "doctor" ? doctorId : "patient-demo-id",
+      email: targetEmail.trim(),
+      role: targetRole,
+      name: targetName || (targetRole === "doctor" ? (isFallback ? "Dr. Local Account" : "Dr. Demo Account") : (isFallback ? "Local Patient" : "Demo Patient")),
+      isSandbox: true,
+      specialization: targetRole === "doctor" ? targetSpec : undefined,
+      degree: targetRole === "doctor" ? targetDegree || "MBBS" : undefined,
+      fees: targetRole === "doctor" ? Number(targetFees) : undefined,
+    };
+    localStorage.setItem("clinihome-session", JSON.stringify(mockUser));
+
+    // Sync cookie for proxy auth guard
+    document.cookie = `clinihome-session=${encodeURIComponent(JSON.stringify(mockUser))}; path=/; max-age=604800; SameSite=Lax`;
+
+    if (isSigningUp && targetRole === "doctor") {
+      try {
+        const storedDocs = localStorage.getItem("clinihome-doctors-list");
+        const docs = storedDocs ? JSON.parse(storedDocs) : [];
+        if (!docs.some((d: any) => d.email === targetEmail.trim())) {
+          docs.push({
+            id: "doc-" + Date.now(),
+            email: targetEmail.trim(),
+            name: mockUser.name,
+            specialization: targetSpec,
+            degree: targetDegree || "MBBS",
+            fees: Number(targetFees) || 300,
+            city: "Delhi",
+            area: isFallback ? "Lajpat Nagar" : "Connaught Place",
+            rating: 4.5,
+            distance: isFallback ? 2.0 : 1.5,
+            phone: "+91 99999 99999",
+            is_approved: false,
+          });
+          localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
+        }
+      } catch (e) {
+        console.warn("Error adding local sandbox doctor:", e);
+      }
+    }
+
+    // Seed profile data for returning sandbox users to prevent name mismatch discrepancies
+    if (!isSigningUp) {
+      if (targetRole === "patient") {
+        const patientProfile = {
+          name: mockUser.name,
+          phone: "+91 98765 43210",
+          age: 28,
+          gender: "male" as const,
+          blood_group: "O+",
+          conditions: ["Hypertension (High BP)"],
+          medications: ["Amlodipine 5mg"],
+          allergies: ["Penicillin"],
+          uploaded_reports: [],
+          health_goals: ["Control Blood Pressure", "Improve Sleep"],
+          language_preference: "english" as const,
+          onboarding_completed: true,
+        };
+        localStorage.setItem("clinihome-patient-profile", JSON.stringify(patientProfile));
+        
+        const trackerProfile = {
+          name: mockUser.name,
+          age: 28,
+          gender: "male" as const,
+          weight_kg: 72,
+          height_cm: 175,
+          conditions: ["Hypertension (High BP)"],
+          medications: ["Amlodipine 5mg"],
+          daily_cal_goal: 2000,
+          step_goal: 8000,
+          sleep_goal_hrs: 8.0,
+        };
+        localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
+      } else if (targetRole === "doctor") {
+        const doctorProfile = {
+          name: mockUser.name,
+          phone: "+91 99999 99999",
+          specialization: targetSpec || "General Physician",
+          degree: targetDegree || "MBBS, MD",
+          experience_years: 8,
+          city: "Delhi",
+          area: isFallback ? "Lajpat Nagar" : "Connaught Place",
+          fees: Number(targetFees) || 300,
+          preferred_conditions: ["Fever & Infections", "Diabetes Management", "Heart & BP Issues"],
+          preferred_age_groups: ["All Ages"],
+          consultation_modes: ["chat"],
+          ai_settings: {
+            ai_assisted_replies: true,
+            auto_patient_summary: true,
+            patient_data_access: "full",
+          },
+          onboarding_completed: true,
+        };
+        localStorage.setItem("clinihome-doctor-profile", JSON.stringify(doctorProfile));
+      }
+    }
+
+    if (isSigningUp || !isOnboardingCompleted(targetRole)) {
+      router.push("/onboarding");
+    } else if (targetRole === "doctor") {
+      router.push("/doctor-dashboard");
+    } else {
+      router.push("/");
     }
   };
 
@@ -118,128 +280,13 @@ export default function LoginPage() {
     const supabaseMissing = !supabase || !process.env.NEXT_PUBLIC_SUPABASE_URL;
 
     if (isDemo || supabaseMissing) {
-      // Simulate login using local storage sandbox session
-      let doctorId = "doc-demo-id";
-      if (targetRole === "doctor") {
-        try {
-          const storedDocs = localStorage.getItem("clinihome-doctors-list");
-          const docs = storedDocs ? JSON.parse(storedDocs) : [];
-          const found = docs.find((d: any) => d.email === targetEmail.trim());
-          if (found) {
-            doctorId = found.id;
-          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@clinihome.ai") {
-            doctorId = "1";
-          }
-        } catch (e) {}
-      }
-      const mockUser = {
-        id: targetRole === "doctor" ? doctorId : "patient-demo-id",
-        email: targetEmail.trim(),
-        role: targetRole,
-        name: targetName || (targetRole === "doctor" ? "Dr. Demo Account" : "Demo Patient"),
-        isSandbox: true,
-        specialization: targetRole === "doctor" ? targetSpec : undefined,
-        degree: targetRole === "doctor" ? targetDegree || "MBBS" : undefined,
-        fees: targetRole === "doctor" ? Number(targetFees) : undefined,
-      };
-      localStorage.setItem("clinihome-session", JSON.stringify(mockUser));
-
-      if (isSigningUp && targetRole === "doctor") {
-        try {
-          const storedDocs = localStorage.getItem("clinihome-doctors-list");
-          const docs = storedDocs ? JSON.parse(storedDocs) : [];
-          if (!docs.some((d: any) => d.email === targetEmail.trim())) {
-            docs.push({
-              id: "doc-" + Date.now(),
-              email: targetEmail.trim(),
-              name: targetName || "Dr. Demo Account",
-              specialization: targetSpec,
-              degree: targetDegree || "MBBS",
-              fees: Number(targetFees) || 300,
-              city: "Delhi",
-              area: "Connaught Place",
-              rating: 4.5,
-              distance: 1.5,
-              phone: "+91 99999 99999",
-              is_approved: false,
-            });
-            localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
-          }
-        } catch (e) {
-          console.warn("Error adding local sandbox doctor:", e);
-        }
-      }
-
-      // Seed profile data for returning sandbox users to prevent name mismatch discrepancies
-      if (!isSigningUp) {
-        if (targetRole === "patient") {
-          const patientProfile = {
-            name: mockUser.name,
-            phone: "+91 98765 43210",
-            age: 28,
-            gender: "male" as const,
-            blood_group: "O+",
-            conditions: ["Hypertension (High BP)"],
-            medications: ["Amlodipine 5mg"],
-            allergies: ["Penicillin"],
-            uploaded_reports: [],
-            health_goals: ["Control Blood Pressure", "Improve Sleep"],
-            language_preference: "hinglish" as const,
-            onboarding_completed: true,
-          };
-          localStorage.setItem("clinihome-patient-profile", JSON.stringify(patientProfile));
-          
-          const trackerProfile = {
-            name: mockUser.name,
-            age: 28,
-            gender: "male" as const,
-            weight_kg: 72,
-            height_cm: 175,
-            conditions: ["Hypertension (High BP)"],
-            medications: ["Amlodipine 5mg"],
-            daily_cal_goal: 2000,
-            step_goal: 8000,
-            sleep_goal_hrs: 8.0,
-          };
-          localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
-        } else if (targetRole === "doctor") {
-          const doctorProfile = {
-            name: mockUser.name,
-            phone: "+91 99999 99999",
-            specialization: targetSpec || "General Physician",
-            degree: targetDegree || "MBBS, MD",
-            experience_years: 8,
-            city: "Delhi",
-            area: "Connaught Place",
-            fees: Number(targetFees) || 300,
-            preferred_conditions: ["Fever & Infections", "Diabetes Management", "Heart & BP Issues"],
-            preferred_age_groups: ["All Ages"],
-            consultation_modes: ["chat"],
-            ai_settings: {
-              ai_assisted_replies: true,
-              auto_patient_summary: true,
-              patient_data_access: "full",
-            },
-            onboarding_completed: true,
-          };
-          localStorage.setItem("clinihome-doctor-profile", JSON.stringify(doctorProfile));
-        }
-      }
-
+      loginToSandbox(targetEmail, targetRole, targetName, targetSpec, targetDegree, targetFees, isSigningUp, false);
       setLoading(false);
-
-      // Route: new signup → onboarding, returning user → dashboard
-      if (isSigningUp || !isOnboardingCompleted(targetRole)) {
-        router.push("/onboarding");
-      } else if (targetRole === "doctor") {
-        router.push("/doctor-dashboard");
-      } else {
-        router.push("/");
-      }
       return;
     }
 
     try {
+      if (!supabase) return;
       if (isSigningUp) {
         // Sign Up with Supabase Auth
         const { data, error: signUpError } = await supabase.auth.signUp({
@@ -282,7 +329,7 @@ export default function LoginPage() {
           const activeRole = profile?.role || targetRole;
 
           // Fetch reports if role is patient
-          let reports = [];
+          let reports: any[] = [];
           if (activeRole === "patient") {
             const { data: reportsData } = await supabase
               .from("uploaded_reports")
@@ -304,6 +351,9 @@ export default function LoginPage() {
             name: profile?.full_name || targetName || data.session.user.email,
           };
           localStorage.setItem("clinihome-session", JSON.stringify(activeUser));
+          
+          // Sync cookie for proxy auth guard
+          document.cookie = `clinihome-session=${encodeURIComponent(JSON.stringify(activeUser))}; path=/; max-age=604800; SameSite=Lax`;
 
           // Route based on onboarding status
           if (!isOnboardingCompleted(activeUser.role as "patient" | "doctor")) {
@@ -318,118 +368,8 @@ export default function LoginPage() {
     } catch (err: any) {
       console.warn("Supabase Auth failed, using local sandbox flow:", err);
       // Fallback sandbox login
-      let doctorId = "doc-demo-id";
-      if (targetRole === "doctor") {
-        try {
-          const storedDocs = localStorage.getItem("clinihome-doctors-list");
-          const docs = storedDocs ? JSON.parse(storedDocs) : [];
-          const found = docs.find((d: any) => d.email === targetEmail.trim());
-          if (found) {
-            doctorId = found.id;
-          } else if (targetName === "Dr. Priya Sharma" || targetEmail === "demo-doctor@clinihome.ai") {
-            doctorId = "1";
-          }
-        } catch (e) {}
-      }
-      const fallbackUser = {
-        id: targetRole === "doctor" ? doctorId : "patient-demo-id",
-        email: targetEmail.trim(),
-        role: targetRole,
-        name: targetName || (targetRole === "doctor" ? "Dr. Local Account" : "Local Patient"),
-        isSandbox: true,
-      };
-      localStorage.setItem("clinihome-session", JSON.stringify(fallbackUser));
+      loginToSandbox(targetEmail, targetRole, targetName, targetSpec, targetDegree, targetFees, isSigningUp, true);
       setSandboxInfo("Supabase database offline or login failed. Accessing app in Sandboxed Mode.");
-      
-      if (isSigningUp && targetRole === "doctor") {
-        try {
-          const storedDocs = localStorage.getItem("clinihome-doctors-list");
-          const docs = storedDocs ? JSON.parse(storedDocs) : [];
-          if (!docs.some((d: any) => d.email === targetEmail.trim())) {
-            docs.push({
-              id: "doc-" + Date.now(),
-              email: targetEmail.trim(),
-              name: targetName || "Dr. Local Account",
-              specialization: targetSpec,
-              degree: targetDegree || "MBBS",
-              fees: Number(targetFees) || 300,
-              city: "Delhi",
-              area: "Lajpat Nagar",
-              rating: 4.5,
-              distance: 2.0,
-              phone: "+91 99999 99999",
-              is_approved: false,
-            });
-            localStorage.setItem("clinihome-doctors-list", JSON.stringify(docs));
-          }
-        } catch (e) {
-          console.warn("Error adding local fallback doctor:", e);
-        }
-      }
-
-      // Seed fallback profiles for returning local sandbox users
-      if (!isSigningUp) {
-        if (targetRole === "patient") {
-          const patientProfile = {
-            name: fallbackUser.name,
-            phone: "+91 98765 43210",
-            age: 28,
-            gender: "male" as const,
-            blood_group: "O+",
-            conditions: ["Hypertension (High BP)"],
-            medications: ["Amlodipine 5mg"],
-            allergies: ["Penicillin"],
-            uploaded_reports: [],
-            health_goals: ["Control Blood Pressure", "Improve Sleep"],
-            language_preference: "hinglish" as const,
-            onboarding_completed: true,
-          };
-          localStorage.setItem("clinihome-patient-profile", JSON.stringify(patientProfile));
-          
-          const trackerProfile = {
-            name: fallbackUser.name,
-            age: 28,
-            gender: "male" as const,
-            weight_kg: 72,
-            height_cm: 175,
-            conditions: ["Hypertension (High BP)"],
-            medications: ["Amlodipine 5mg"],
-            daily_cal_goal: 2000,
-            step_goal: 8000,
-            sleep_goal_hrs: 8.0,
-          };
-          localStorage.setItem("clinihome-health-profile", JSON.stringify(trackerProfile));
-        } else if (targetRole === "doctor") {
-          const doctorProfile = {
-            name: fallbackUser.name,
-            phone: "+91 99999 99999",
-            specialization: targetSpec || "General Physician",
-            degree: targetDegree || "MBBS, MD",
-            experience_years: 8,
-            city: "Delhi",
-            area: "Lajpat Nagar",
-            fees: Number(targetFees) || 300,
-            preferred_conditions: ["Fever & Infections", "Diabetes Management", "Heart & BP Issues"],
-            preferred_age_groups: ["All Ages"],
-            consultation_modes: ["chat"],
-            ai_settings: {
-              ai_assisted_replies: true,
-              auto_patient_summary: true,
-              patient_data_access: "full",
-            },
-            onboarding_completed: true,
-          };
-          localStorage.setItem("clinihome-doctor-profile", JSON.stringify(doctorProfile));
-        }
-      }
-
-      if (isSigningUp || !isOnboardingCompleted(targetRole)) {
-        router.push("/onboarding");
-      } else if (targetRole === "doctor") {
-        router.push("/doctor-dashboard");
-      } else {
-        router.push("/");
-      }
     } finally {
       setLoading(false);
     }
@@ -596,6 +536,7 @@ export default function LoginPage() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     placeholder="Enter full name"
+                    aria-label="Full Name"
                     style={{
                       width: "100%",
                       padding: "10px 12px 10px 36px",
@@ -610,7 +551,7 @@ export default function LoginPage() {
                 </div>
               </div>
             )}
-
+ 
             <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
               <label style={{ fontFamily: "var(--font-body)", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>
                 Email Address
@@ -622,6 +563,33 @@ export default function LoginPage() {
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   placeholder="name@example.com"
+                  aria-label="Email Address"
+                  style={{
+                    width: "100%",
+                    padding: "10px 12px 10px 36px",
+                    borderRadius: "8px",
+                    border: "1px solid var(--border)",
+                    background: "var(--bg-card)",
+                    color: "var(--text-primary)",
+                    fontSize: "13px",
+                    outline: "none",
+                  }}
+                />
+              </div>
+            </div>
+ 
+            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+              <label style={{ fontFamily: "var(--font-body)", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>
+                Password
+              </label>
+              <div style={{ position: "relative" }}>
+                <Lock size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Enter password"
+                  aria-label="Password"
                   style={{
                     width: "100%",
                     padding: "10px 12px 10px 36px",
@@ -636,30 +604,30 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-              <label style={{ fontFamily: "var(--font-body)", fontSize: "13px", fontWeight: 600, color: "var(--text-primary)" }}>
-                Password
-              </label>
-              <div style={{ position: "relative" }}>
-                <Lock size={16} style={{ position: "absolute", left: "12px", top: "50%", transform: "translateY(-50%)", color: "var(--text-secondary)" }} />
-                <input
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Enter password"
-                  style={{
-                    width: "100%",
-                    padding: "10px 12px 10px 36px",
-                    borderRadius: "8px",
-                    border: "1px solid var(--border)",
-                    background: "var(--bg-card)",
-                    color: "var(--text-primary)",
-                    fontSize: "13px",
-                    outline: "none",
+            {!isSignUp && (
+              <div style={{ display: "flex", justifyContent: "flex-end", marginTop: "-2px" }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setResetEmail(email);
+                    setShowResetModal(true);
+                    setResetSuccess(false);
+                    setResetError("");
                   }}
-                />
+                  style={{
+                    background: "none",
+                    border: "none",
+                    color: "var(--purple-primary)",
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    cursor: "pointer",
+                    padding: 0,
+                  }}
+                >
+                  Forgot Password?
+                </button>
               </div>
-            </div>
+            )}
 
             {/* Doctor Specific Fields */}
             {isSignUp && role === "doctor" && (
@@ -673,6 +641,7 @@ export default function LoginPage() {
                     <select
                       value={specialization}
                       onChange={(e) => setSpecialization(e.target.value)}
+                      aria-label="Specialization"
                       style={{
                         width: "100%",
                         padding: "10px 12px 10px 36px",
@@ -704,6 +673,7 @@ export default function LoginPage() {
                         value={degree}
                         onChange={(e) => setDegree(e.target.value)}
                         placeholder="e.g. MBBS, MD"
+                        aria-label="Degree"
                         style={{
                           width: "100%",
                           padding: "10px 12px 10px 36px",
@@ -729,6 +699,7 @@ export default function LoginPage() {
                         value={fees}
                         onChange={(e) => setFees(e.target.value)}
                         placeholder="300"
+                        aria-label="Fees"
                         style={{
                           width: "100%",
                           padding: "10px 12px 10px 36px",
@@ -843,6 +814,131 @@ export default function LoginPage() {
           </div>
         </div>
       </div>
+
+      {/* Password Reset Modal */}
+      {showResetModal && (
+        <div
+          style={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: "rgba(0, 0, 0, 0.4)",
+            backdropFilter: "blur(5px)",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            zIndex: 1000,
+          }}
+        >
+          <div
+            style={{
+              background: "var(--bg-card)",
+              border: "1px solid var(--border, rgba(0, 0, 0, 0.1))",
+              borderRadius: "20px",
+              padding: "32px",
+              maxWidth: "400px",
+              width: "90%",
+              boxShadow: "0 20px 40px rgba(0, 0, 0, 0.15)",
+            }}
+          >
+            <h3 style={{ fontSize: "18px", fontWeight: 700, margin: "0 0 12px 0", color: "var(--text-primary)" }}>
+              Reset Password
+            </h3>
+            {resetSuccess ? (
+              <div>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, margin: "0 0 20px 0" }}>
+                  A password reset link has been simulated & sent to <strong style={{ color: "var(--text-primary)" }}>{resetEmail}</strong>. Please check your inbox.
+                </p>
+                <button
+                  onClick={() => setShowResetModal(false)}
+                  style={{
+                    width: "100%",
+                    background: "var(--purple-primary)",
+                    color: "white",
+                    fontWeight: 600,
+                    fontSize: "13px",
+                    padding: "10px",
+                    borderRadius: "100px",
+                    border: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  Done
+                </button>
+              </div>
+            ) : (
+              <form onSubmit={handleResetPassword} style={{ display: "flex", flexDirection: "column", gap: "16px" }}>
+                <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.5, margin: 0 }}>
+                  Enter your email address and we'll send you instructions to reset your password.
+                </p>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-primary)" }}>Email Address</label>
+                  <input
+                    type="email"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    required
+                    style={{
+                      padding: "10px 12px",
+                      borderRadius: "8px",
+                      border: "1px solid var(--border)",
+                      background: "var(--bg-surface)",
+                      color: "var(--text-primary)",
+                      fontSize: "13px",
+                      outline: "none",
+                    }}
+                  />
+                </div>
+                {resetError && (
+                  <p style={{ color: "var(--severity-high)", fontSize: "12px", fontWeight: 600, margin: 0 }}>
+                    ⚠️ {resetError}
+                  </p>
+                )}
+                <div style={{ display: "flex", gap: "10px", marginTop: "4px" }}>
+                  <button
+                    type="submit"
+                    disabled={loading}
+                    style={{
+                      flex: 1,
+                      background: "var(--purple-primary)",
+                      color: "white",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      padding: "10px",
+                      borderRadius: "100px",
+                      border: "none",
+                      cursor: "pointer",
+                    }}
+                  >
+                    {loading ? "Sending..." : "Send Reset Link"}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowResetModal(false)}
+                    style={{
+                      flex: 1,
+                      background: "transparent",
+                      border: "1px solid var(--border)",
+                      color: "var(--text-primary)",
+                      fontWeight: 600,
+                      fontSize: "13px",
+                      padding: "10px",
+                      borderRadius: "100px",
+                      cursor: "pointer",
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

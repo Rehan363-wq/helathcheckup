@@ -579,6 +579,9 @@ export default function TrackerDashboard() {
           .dashboard-bottom-grid { grid-template-columns: 1fr !important; }
           .dashboard-quick-actions { grid-template-columns: 1fr !important; }
         }
+        @media (max-width: 480px) {
+          .dashboard-stats-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </div>
   );

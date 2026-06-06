@@ -287,7 +287,7 @@ ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS conditions TEXT[];
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS medications TEXT[];
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS allergies TEXT[];
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS health_goals TEXT[];
-ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language_preference TEXT DEFAULT 'hinglish';
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS language_preference TEXT DEFAULT 'english';
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS onboarding_completed BOOLEAN DEFAULT false;
 ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS is_approved BOOLEAN DEFAULT true;
 -- Doctor-specific extensions

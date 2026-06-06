@@ -29,15 +29,25 @@ export default function AdminPage() {
     }
   }, []);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    const adminSecret = process.env.NEXT_PUBLIC_ADMIN_SECRET || "admin123";
-    if (password === adminSecret) {
-      sessionStorage.setItem("clinihome-admin-auth", "true");
-      setIsAuthenticated(true);
-      setAuthError("");
-    } else {
-      setAuthError("Incorrect password. Please try again.");
+    setAuthError("");
+    try {
+      const res = await fetch("/api/admin/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+      const data = await res.json();
+      if (data.authenticated) {
+        sessionStorage.setItem("clinihome-admin-auth", "true");
+        setIsAuthenticated(true);
+        setAuthError("");
+      } else {
+        setAuthError(data.error || "Incorrect password. Please try again.");
+      }
+    } catch (err) {
+      setAuthError("An error occurred during authentication.");
     }
   };
 
