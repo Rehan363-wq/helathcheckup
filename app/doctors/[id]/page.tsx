@@ -21,7 +21,12 @@ import { MOCK_DOCTORS } from "@/lib/doctors";
 import { createClient } from "@/lib/supabase/client";
 
 const getDoctorReviews = (doctorName: string, specialization: string) => {
-  const lastName = doctorName ? doctorName.split(" ").slice(1).join(" ") : "Doctor";
+  let lastName = "Doctor";
+  if (doctorName) {
+    const clean = doctorName.replace(/^(dr\.?\s+)/i, "").trim();
+    const parts = clean.split(/\s+/).filter(Boolean);
+    lastName = parts[parts.length - 1] || "Doctor";
+  }
   return [
     { 
       id: "rev-1", 
@@ -325,7 +330,13 @@ export default function DoctorProfilePage() {
               <div style={{ background: "var(--bg-card)", border: "1px solid var(--border)", borderRadius: "16px", padding: "28px", boxShadow: "var(--shadow-card)" }}>
                 <div style={{ display: "flex", gap: "20px", alignItems: "flex-start", flexWrap: "wrap" }}>
                   <div style={{ width: "64px", height: "64px", borderRadius: "14px", background: "rgba(0, 113, 227, 0.05)", display: "flex", alignItems: "center", justifyContent: "center", fontSize: "24px", color: "var(--purple-primary)", fontWeight: 700 }}>
-                    {doctor.name.split(" ").slice(1).map((n) => n[0]).join("")}
+                    {(() => {
+                      const clean = doctor.name.replace(/^(dr\.?\s+)/i, "").trim();
+                      const parts = clean.split(/\s+/).filter(Boolean);
+                      if (parts.length === 0) return "DR";
+                      if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+                      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+                    })()}
                   </div>
                   <div>
                     <h1 style={{ fontSize: "22px", fontWeight: 800, color: "var(--text-primary)", display: "inline-flex", alignItems: "center", gap: "6px", margin: 0 }}>
@@ -351,7 +362,10 @@ export default function DoctorProfilePage() {
                 <div style={{ borderTop: "1px solid var(--border)", marginTop: "24px", paddingTop: "20px" }}>
                   <h4 style={{ fontSize: "15px", fontWeight: 700, marginBottom: "8px" }}>Professional Statement</h4>
                   <p style={{ fontSize: "13px", color: "var(--text-secondary)", lineHeight: 1.6, margin: 0 }}>
-                    Dr. {doctor.name.split(" ").slice(1).join(" ")} is a recognized clinical specialist committed to providing empathetic, evidence-based care. With extensive credentials in {doctor.specialization.toLowerCase()} and related medical boards, they prioritize thorough patient diagnostics, holistic follow-up plans, and transparent clinical counseling to reduce wellness anxiety.
+                    Dr. {(() => {
+                      const clean = doctor.name.replace(/^(dr\.?\s+)/i, "").trim();
+                      return clean;
+                    })()} is a recognized clinical specialist committed to providing empathetic, evidence-based care. With extensive credentials in {doctor.specialization.toLowerCase()} and related medical boards, they prioritize thorough patient diagnostics, holistic follow-up plans, and transparent clinical counseling to reduce wellness anxiety.
                   </p>
                 </div>
               </div>

@@ -41,6 +41,11 @@ const extractUnitAndValue = (valueStr: string, rangeStr: string) => {
 
 export default function ReportPage() {
   const [isLoading, setIsLoading] = useState(false);
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   useEffect(() => {
     document.title = "Report Explainer — CliniHome AI";
@@ -149,7 +154,7 @@ export default function ReportPage() {
       navigator.share({ title: "Medical Report Analysis", text });
     } else {
       navigator.clipboard.writeText(text);
-      alert("Report summary copied to clipboard!");
+      showToast("Report summary copied to clipboard!");
     }
   };
 
@@ -637,6 +642,26 @@ RBC Count: 3.8 million/cumm (Normal Range: 4.0 - 5.2)`;
           </p>
         </div>
       </div>
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "var(--purple-primary)",
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "100px",
+            boxShadow: "0 8px 24px rgba(124,58,237,0.3)",
+            fontSize: "13px",
+            fontWeight: 600,
+            zIndex: 9999,
+          }}
+          className="animate-pop-in"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

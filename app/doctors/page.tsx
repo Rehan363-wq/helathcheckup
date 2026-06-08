@@ -8,12 +8,33 @@ import { Search, Filter, MapPin } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
 import { Doctor } from "@/types/doctor";
 
+function getMapCoords(doctor: Doctor) {
+  // Map lat [28.50, 28.66] and lng [77.18, 77.34] to [10%, 90%] on the simulated map container.
+  const minLat = 28.50;
+  const maxLat = 28.66;
+  const minLng = 77.18;
+  const maxLng = 77.34;
+  
+  const latVal = doctor.lat || 28.55;
+  const lngVal = doctor.lng || 77.25;
+
+  let left = ((lngVal - minLng) / (maxLng - minLng)) * 80 + 10;
+  let top = 90 - ((latVal - minLat) / (maxLat - minLat)) * 80;
+
+  // Clamp values to be safe
+  left = Math.max(5, Math.min(95, left));
+  top = Math.max(5, Math.min(95, top));
+
+  return { left: `${left}%`, top: `${top}%` };
+}
+
 function DoctorsListContent() {
   const searchParams = useSearchParams();
   const initialSearch = searchParams.get("search") || "";
 
   const [selectedSpecialization, setSelectedSpecialization] = useState("All");
   const [maxFees, setMaxFees] = useState(1000);
+  const [maxDistance, setMaxDistance] = useState(10);
   const [activeDoctor, setActiveDoctor] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState(initialSearch);
   
@@ -123,7 +144,7 @@ function DoctorsListContent() {
   const specializations = useMemo(() => getUniqueSpecializations(doctors), [doctors]);
 
   const filteredDoctors = useMemo(() => {
-    let list = filterDoctors(doctors, selectedSpecialization, maxFees);
+    let list = filterDoctors(doctors, selectedSpecialization, maxFees, maxDistance);
     if (searchQuery.trim()) {
       const q = searchQuery.toLowerCase().trim();
       list = list.filter(
@@ -142,7 +163,7 @@ function DoctorsListContent() {
       );
     }
     return list;
-  }, [doctors, selectedSpecialization, maxFees, searchQuery]);
+  }, [doctors, selectedSpecialization, maxFees, maxDistance, searchQuery]);
 
   return (
     <div style={{ minHeight: "100vh", background: "var(--bg-surface)", padding: "40px 24px" }}>
@@ -266,6 +287,35 @@ function DoctorsListContent() {
             <span style={{ fontWeight: 600 }}>₹{maxFees}</span>
           </div>
 
+          {/* Distance filter slider */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              fontFamily: "var(--font-body)",
+              fontSize: "13px",
+              color: "var(--text-secondary)",
+            }}
+          >
+            <span>Distance:</span>
+            <input
+              type="range"
+              id="distance-filter"
+              min={1}
+              max={10}
+              step={1}
+              value={maxDistance}
+              onChange={(e) => setMaxDistance(Number(e.target.value))}
+              style={{
+                width: "100px",
+                accentColor: "var(--purple-primary)",
+                cursor: "pointer",
+              }}
+            />
+            <span style={{ fontWeight: 600 }}>{maxDistance} km</span>
+          </div>
+
           {/* Result Count */}
           <span
             style={{
@@ -384,83 +434,86 @@ function DoctorsListContent() {
               <div style={{ position: "absolute", left: "40%", top: 0, bottom: 0, width: "20px", background: "white", transform: "rotate(20deg)", opacity: 0.8 }} />
 
               {/* Pins of Specialists */}
-              {filteredDoctors.map((doctor, i) => (
-                <div
-                  key={doctor.id}
-                  onClick={() => setActiveDoctor(doctor.id)}
-                  style={{
-                    position: "absolute",
-                    left: `${20 + (i * 15) % 60}%`,
-                    top: `${20 + (i * 18) % 60}%`,
-                    cursor: "pointer",
-                    transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
-                    transform: activeDoctor === doctor.id ? "scale(1.2)" : "scale(1)",
-                    zIndex: activeDoctor === doctor.id ? 10 : 1,
-                  }}
-                >
+              {filteredDoctors.map((doctor) => {
+                const coords = getMapCoords(doctor);
+                return (
                   <div
+                    key={doctor.id}
+                    onClick={() => setActiveDoctor(doctor.id)}
                     style={{
-                      width: "34px",
-                      height: "34px",
-                      borderRadius: "50% 50% 50% 0%",
-                      transform: "rotate(-45deg)",
-                      background: activeDoctor === doctor.id
-                        ? "linear-gradient(135deg, #0071E3, #3897FD)"
-                        : "var(--purple-primary)",
-                      display: "flex",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      boxShadow: activeDoctor === doctor.id
-                        ? "0 4px 12px rgba(0,113,227,0.3)"
-                        : "0 2px 6px rgba(0,0,0,0.1)",
+                      position: "absolute",
+                      left: coords.left,
+                      top: coords.top,
+                      cursor: "pointer",
+                      transition: "all 0.3s cubic-bezier(0.16, 1, 0.3, 1)",
+                      transform: activeDoctor === doctor.id ? "scale(1.2)" : "scale(1)",
+                      zIndex: activeDoctor === doctor.id ? 10 : 1,
                     }}
                   >
-                    <MapPin
-                      size={14}
-                      style={{ color: "white", transform: "rotate(45deg)" }}
-                    />
-                  </div>
-                  {activeDoctor === doctor.id && (
                     <div
-                      className="animate-pop-in animate-card"
                       style={{
-                        position: "absolute",
-                        top: "calc(100% + 8px)",
-                        left: "50%",
-                        transform: "translateX(-50%)",
-                        background: "var(--bg-card)",
-                        border: "1px solid var(--border)",
-                        borderRadius: "12px",
-                        padding: "8px 12px",
-                        whiteSpace: "nowrap",
-                        boxShadow: "var(--shadow-dark)",
+                        width: "34px",
+                        height: "34px",
+                        borderRadius: "50% 50% 50% 0%",
+                        transform: "rotate(-45deg)",
+                        background: activeDoctor === doctor.id
+                          ? "linear-gradient(135deg, #0071E3, #3897FD)"
+                          : "var(--purple-primary)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        boxShadow: activeDoctor === doctor.id
+                          ? "0 4px 12px rgba(0,113,227,0.3)"
+                          : "0 2px 6px rgba(0,0,0,0.1)",
                       }}
                     >
-                      <p
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          color: "var(--text-primary)",
-                          margin: 0,
-                        }}
-                      >
-                        {doctor.name}
-                      </p>
-                      <p
-                        style={{
-                          fontFamily: "var(--font-body)",
-                          fontSize: "11px",
-                          color: "var(--text-secondary)",
-                          margin: 0,
-                        }}
-                      >
-                        {doctor.specialization} • ₹{doctor.fees}
-                      </p>
+                      <MapPin
+                        size={14}
+                        style={{ color: "white", transform: "rotate(45deg)" }}
+                      />
                     </div>
-                  )}
-                </div>
-              ))}
+                    {activeDoctor === doctor.id && (
+                      <div
+                        className="animate-pop-in animate-card"
+                        style={{
+                          position: "absolute",
+                          top: "calc(100% + 8px)",
+                          left: "50%",
+                          transform: "translateX(-50%)",
+                          background: "var(--bg-card)",
+                          border: "1px solid var(--border)",
+                          borderRadius: "12px",
+                          padding: "8px 12px",
+                          whiteSpace: "nowrap",
+                          boxShadow: "var(--shadow-dark)",
+                        }}
+                      >
+                        <p
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontSize: "12px",
+                            fontWeight: 700,
+                            color: "var(--text-primary)",
+                            margin: 0,
+                          }}
+                        >
+                          {doctor.name}
+                        </p>
+                        <p
+                          style={{
+                            fontFamily: "var(--font-body)",
+                            fontSize: "11px",
+                            color: "var(--text-secondary)",
+                            margin: 0,
+                          }}
+                        >
+                          {doctor.specialization} • ₹{doctor.fees} ({doctor.distance} km)
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                );
+              })}
 
               {/* Map Footer Tag */}
               <div

@@ -54,7 +54,26 @@ This document lists the resolved bugs, user experience improvements, security en
 
 ---
 
+## 🔍 Resolved Issues & Improvements (Phase 9 Completion)
+
+1. **Avatar Initials & Name Formatting Bug**:
+   - Files: `components/doctor-card.tsx` and `app/doctors/[id]/page.tsx`
+   - Issue: Doctor initials extraction via `doctor.name.split(" ").slice(1)` failed if the doctor registered without a "Dr." prefix or had a single-word name, leaving the avatar blank or name labels as `"Dr. "`.
+   - Fix: Implemented robust logic using regex to strip the greeting prefix, split correctly, and generate initials.
+
+2. **Blocking Browser Alert Popups**:
+   - Files: `app/tracker/music/page.tsx`, `app/report/page.tsx`, and `app/profile/page.tsx`
+   - Issue: Browser `alert()` calls froze the main UI thread and looked unpolished.
+   - Fix: Created an in-app non-blocking custom glassmorphic Toast notification component for clipboard copies, data erasures, and timer completions.
+
+3. **Static Map Placeholder Visual Controls**:
+   - File: `app/doctors/page.tsx`
+   - Issue: The map simulation card was static.
+   - Fix: Added a clinic distance slider filter to filter simulated doctors on the map canvas and projected stable coordinates on the simulated map.
+
+---
+
 ## 🛠️ Verification & Compile Status
-- **Vitest Unit Tests**: Passed (`2/2` checks succeeded).
+- **Vitest Unit Tests**: Passed (`8/8` checks succeeded).
 - **Turbopack Build**: Successful compile (`npm run build` completed with `0` errors/warnings).
 - **TypeScript Check**: Passed cleanly.

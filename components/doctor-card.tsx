@@ -51,7 +51,13 @@ export default function DoctorCard({
             color: "var(--purple-primary)",
           }}
         >
-          {doctor.name.split(" ").slice(1).map((n) => n[0]).join("")}
+          {(() => {
+            const clean = doctor.name.replace(/^(dr\.?\s+)/i, "").trim();
+            const parts = clean.split(/\s+/).filter(Boolean);
+            if (parts.length === 0) return "DR";
+            if (parts.length === 1) return parts[0].substring(0, 2).toUpperCase();
+            return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+          })()}
         </div>
 
         {/* Doctor Information */}

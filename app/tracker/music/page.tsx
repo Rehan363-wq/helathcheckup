@@ -29,6 +29,11 @@ const SOUNDSCAPES_DB: Track[] = [
 
 export default function MusicPlayerPage() {
   const [log, setLog] = useState<DailyLog | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<"all" | "nature" | "lofi" | "classical" | "bowls">("all");
 
@@ -79,7 +84,7 @@ export default function MusicPlayerPage() {
       }
       setSecondsRemaining(null);
       setSleepTimerMinutes(0);
-      alert("Sleep timer ended. Soundscape playback has been auto-paused.");
+      showToast("Sleep timer ended. Soundscape playback has been auto-paused.");
     }
     return () => {
       if (interval) clearInterval(interval);
@@ -527,6 +532,26 @@ export default function MusicPlayerPage() {
           50% { transform: scaleY(1); }
         }
       `}</style>
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "var(--purple-primary)",
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "100px",
+            boxShadow: "0 8px 24px rgba(124,58,237,0.3)",
+            fontSize: "13px",
+            fontWeight: 600,
+            zIndex: 9999,
+          }}
+          className="animate-pop-in"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

@@ -48,6 +48,15 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 ### 14. Testing & DevOps Integration
 - **Fix**: Set up Vitest test suite, designed a basic GitHub Actions compile workflow, and relocated demo assets.
 
+### 15. Doctor Name & Initials Extraction (Phase 9)
+- **Fix**: Re-engineered name formatting and initials extraction globally. Corrected card and detail views to gracefully handle doctor profiles that lack the "Dr." prefix or have single-word/complex names.
+
+### 16. Thread-Blocking alert() Replacement (Phase 9)
+- **Fix**: Replaced all blocking browser `alert()` prompts with custom, non-blocking glassmorphic Toast alerts in music tracking, report sharing, and GDPR profile pages (including data export/import/erase).
+
+### 17. Distance Range Search & Map Interaction (Phase 9)
+- **Fix**: Added a Max Distance range filter input slider in the Find Specialists page filter panel and dynamically connected it to filter the doctor list and update stable projected street map coordinate markers in real-time.
+
 ---
 
 ## 🛠️ Implementation Progress Tracker
@@ -74,3 +83,7 @@ This document lists the completed bugs, visual issues, security upgrades, and ar
 - [x] Task 20: Add in-memory client IP rate-limiting to protect Gemini endpoints
 - [x] Task 21: Add root Next.js proxy guards, HTTP security headers, and local storage disclaimer
 - [x] Task 22: Configure Vitest, set up CI/CD pipeline, relocate assets, and compile verify
+- [x] Task 23: Fix avatar initials and doctor name formatting logic for names without 'Dr.' prefix
+- [x] Task 24: Replace thread-blocking browser alert() calls with beautiful, auto-dismissing toast notifications
+- [x] Task 25: Add distance filter controls and simulated map markers interactivity to Find Specialists page
+

@@ -23,6 +23,11 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [importStatus, setImportStatus] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  const showToast = (msg: string) => {
+    setToast(msg);
+    setTimeout(() => setToast(null), 3000);
+  };
 
   // Patient Profile state
   const [patientName, setPatientName] = useState("");
@@ -270,8 +275,9 @@ export default function ProfilePage() {
       document.body.appendChild(downloadAnchor);
       downloadAnchor.click();
       downloadAnchor.remove();
+      showToast("Data backup file downloaded successfully!");
     } catch (e: any) {
-      alert("Failed to export backup data: " + e.message);
+      showToast("Failed to export backup data: " + e.message);
     }
   };
 
@@ -300,7 +306,7 @@ export default function ProfilePage() {
           window.location.reload();
         }, 1500);
       } catch (err: any) {
-        alert("Failed to import data: " + err.message);
+        showToast("Failed to import data: " + err.message);
       }
     };
 
@@ -667,8 +673,10 @@ export default function ProfilePage() {
                       } catch (err) {}
                     }
 
-                    alert(`Privacy request processed. Erased ${deleteCount} local data records and signed out.`);
-                    router.push("/login");
+                    showToast(`Privacy request processed. Erased ${deleteCount} local data records. Signing out...`);
+                    setTimeout(() => {
+                      router.push("/login");
+                    }, 2000);
                   }
                 }}
                 style={{
@@ -695,6 +703,26 @@ export default function ProfilePage() {
           .form-grid-3 { grid-template-columns: 1fr !important; }
         }
       `}</style>
+      {toast && (
+        <div
+          style={{
+            position: "fixed",
+            bottom: "24px",
+            right: "24px",
+            background: "var(--purple-primary)",
+            color: "white",
+            padding: "12px 24px",
+            borderRadius: "100px",
+            boxShadow: "0 8px 24px rgba(124,58,237,0.3)",
+            fontSize: "13px",
+            fontWeight: 600,
+            zIndex: 9999,
+          }}
+          className="animate-pop-in"
+        >
+          {toast}
+        </div>
+      )}
     </div>
   );
 }
