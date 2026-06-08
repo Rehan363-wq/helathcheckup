@@ -1,0 +1,87 @@
+{
+  "app": {
+    "[project]/app/_not-found/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/admin/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/chat/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/dashboard/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/doctor-dashboard/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/doctors/[id]/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/doctors/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/health-bot/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/login/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/onboarding/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/profile/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/reminders/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/report/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/scan/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/tracker/chat/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/tracker/history/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/tracker/log/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/tracker/music/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ],
+    "[project]/app/tracker/page": [
+      "static/media/83afe278b6a6bb3c-s.p.2bn3s6zvc0dyp.woff2",
+      "static/media/70e3db2de7f94926-s.p.39pl-v7c3qrze.woff2"
+    ]
+  },
+  "appUsingSizeAdjust": true,
+  "pages": {},
+  "pagesUsingSizeAdjust": false
+}
