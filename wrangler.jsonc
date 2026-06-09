@@ -11,5 +11,11 @@
 		"directory": ".open-next/assets",
 		"binding": "ASSETS"
 	},
+  "vars": {
+    "GOOGLE_GEMINI_API_KEY": "AIzaSyCxlWyiDPrTc2tHRFQx8HlJAuFN-j6rqnk",
+    "NEXT_PUBLIC_SUPABASE_URL": "https://rhqxxnjnaiwyhqdemust.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJocXh4bmpuYWl3eWhxZGVtdXN0Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NjMwNjEsImV4cCI6MjA5NjAzOTA2MX0.0IUShwWBHRJjOz5NWs3hmQJb6tdjQbf6KS39qjIuCaw",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJocXh4bmpuYWl3eWhxZGVtdXN0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MDQ2MzA2MSwiZXhwIjoyMDk2MDM5MDYxfQ.vlXN0_BI9wUjSHmX9Pb9fmThmP-pIpUTawuwK3G7m78"
+  },
 
 }
